@@ -18,6 +18,16 @@ if (!fs.existsSync(config.uploadDir)) {
   fs.mkdirSync(config.uploadDir, { recursive: true });
 }
 
+// If running in serverless (e.g. /tmp) and no database exists yet, copy bundled database
+const bundledDbPath = path.resolve(process.cwd(), './data/reseller_store.db');
+if (config.databasePath !== bundledDbPath && !fs.existsSync(config.databasePath) && fs.existsSync(bundledDbPath)) {
+  try {
+    fs.copyFileSync(bundledDbPath, config.databasePath);
+  } catch (copyErr) {
+    console.warn('[DB] Could not copy initial database to /tmp:', copyErr.message);
+  }
+}
+
 export const db = new DatabaseSync(config.databasePath);
 
 // Enable SQLite Write-Ahead Logging & Foreign Keys for maximum throughput and ACID safety

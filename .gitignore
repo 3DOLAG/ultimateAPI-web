@@ -9,12 +9,12 @@ package-lock.json.log
 .env.example
 
 # Database & SQLite files
-data/*.db
 data/*.sqlite
 data/*.sqlite3
 data/*.db-journal
 data/*.db-wal
 data/*.db-shm
+
 
 # Uploads & User Generated Files
 uploads/
