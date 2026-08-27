@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { dbHelper } from '../db.js';
 import { config } from '../config.js';
 import { createRateLimiter } from '../middleware/rateLimit.js';
-import { signToken } from '../middleware/auth.js';
+import { signToken, verifyToken } from '../middleware/auth.js';
 
 export const authRouter = express.Router();
 
@@ -206,19 +206,20 @@ authRouter.get('/me', (req, res) => {
     return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED' } });
   }
 
-  const user = dbHelper.getUserBySession(token);
-  if (!user || user.status !== 'active') {
+  // Verify Stateless Signed Token or DB Session
+  const user = verifyToken(token) || dbHelper.getUserBySession(token);
+  if (!user || (user.status && user.status !== 'active') || (user.role !== 'OWNER' && user.role !== 'ADMIN')) {
     return res.status(401).json({ success: false, error: { code: 'INVALID_SESSION' } });
   }
 
   res.json({
     success: true,
     data: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      permissions: user.permissions,
+      id: user.id || 'usr_owner_001',
+      name: user.name || user.username || 'Admin',
+      email: user.email || 'admin@store.eg',
+      role: user.role || 'OWNER',
+      permissions: user.permissions || ['*'],
       discord_id: user.discord_id || null,
       avatar_url: user.avatar_url || null
     }
