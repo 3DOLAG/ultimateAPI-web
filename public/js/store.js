@@ -1074,12 +1074,19 @@ const StoreApp = {
         })
       });
 
-      const json = await res.json();
+      let json = null;
+      try {
+        json = await res.json();
+      } catch (parseErr) {
+        throw new Error('تعذر معالجة استجابة الخادم، يرجى المحاولة مرة أخرى.');
+      }
+
       if (json.success && json.data) {
         this.showToast('تم تسجيل طلبك بنجاح! يرجى إتمام التحويل.', 'success');
         this.navigate(`/payment/${json.data.reseller_order_id}`);
       } else {
-        this.showToast(json.error?.message || 'تعذر تأكيد الطلب', 'error');
+        const msg = (typeof json.error === 'object' ? json.error?.message : json.error) || 'تعذر تأكيد الطلب';
+        this.showToast(msg, 'error');
       }
     } catch (err) {
       this.showToast(`خطأ: ${err.message}`, 'error');
