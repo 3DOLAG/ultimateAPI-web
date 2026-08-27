@@ -112,23 +112,30 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
-// Start Server
-app.listen(config.port, () => {
-  console.log('\n======================================================');
-  console.log(`✨ RESELLER E-COMMERCE PLATFORM RUNNING ON PORT ${config.port}`);
-  console.log(`🛍️ Storefront: http://localhost:${config.port}`);
-  console.log(`🔒 Admin Login: http://localhost:${config.port}/admin/login`);
-  console.log(`👑 Private Dashboard: http://localhost:${config.port}/admin`);
-  
-  if (config.discordAuth.isConfigured()) {
-    console.log(`🛡️ Discord Admin Auth: ENABLED (Target Discord ID: ${config.discordAuth.adminDiscordId})`);
-  } else {
-    console.log(`⚠️ Discord Admin Auth: INCOMPLETE (Set DISCORD_* and ADMIN_DISCORD_ID in .env)`);
-  }
-  
-  console.log(`🔗 Supplier API Gateway: ${config.supplier.apiUrl}`);
-  console.log('======================================================\n');
+// Start Server when run directly / locally (not inside Vercel Serverless Function)
+const isDirectRun = Boolean(process.argv[1] && (path.resolve(process.argv[1]) === path.resolve(__filename)));
 
-  // Initialize Background Sync Engine
-  syncEngine.init();
-});
+if (isDirectRun && !process.env.VERCEL) {
+  app.listen(config.port, () => {
+    console.log('\n======================================================');
+    console.log(`✨ RESELLER E-COMMERCE PLATFORM RUNNING ON PORT ${config.port}`);
+    console.log(`🛍️ Storefront: http://localhost:${config.port}`);
+    console.log(`🔒 Admin Login: http://localhost:${config.port}/admin/login`);
+    console.log(`👑 Private Dashboard: http://localhost:${config.port}/admin`);
+    
+    if (config.discordAuth.isConfigured()) {
+      console.log(`🛡️ Discord Admin Auth: ENABLED (Target Discord ID: ${config.discordAuth.adminDiscordId})`);
+    } else {
+      console.log(`⚠️ Discord Admin Auth: INCOMPLETE (Set DISCORD_* and ADMIN_DISCORD_ID in .env)`);
+    }
+    
+    console.log(`🔗 Supplier API Gateway: ${config.supplier.apiUrl}`);
+    console.log('======================================================\n');
+
+    // Initialize Background Sync Engine
+    syncEngine.init();
+  });
+}
+
+export { app };
+export default app;

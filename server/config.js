@@ -53,8 +53,12 @@ export const config = {
     syncOnStartup: process.env.SYNC_ON_STARTUP !== 'false'
   },
   discordWebhookUrl: process.env.DISCORD_ORDER_WEBHOOK_URL || '',
-  databasePath: path.resolve(process.cwd(), process.env.DATABASE_PATH || './data/reseller_store.db'),
-  uploadDir: path.resolve(process.cwd(), process.env.UPLOAD_DIR || './uploads/proofs'),
+  databasePath: process.env.DATABASE_PATH
+    ? path.resolve(process.cwd(), process.env.DATABASE_PATH)
+    : (Boolean(process.env.VERCEL) ? '/tmp/reseller_store.db' : path.resolve(process.cwd(), './data/reseller_store.db')),
+  uploadDir: process.env.UPLOAD_DIR
+    ? path.resolve(process.cwd(), process.env.UPLOAD_DIR)
+    : (Boolean(process.env.VERCEL) ? '/tmp/proofs' : path.resolve(process.cwd(), './uploads/proofs')),
   blob: {
     token: process.env.BLOB_READ_WRITE_TOKEN || ''
   }
