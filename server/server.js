@@ -138,7 +138,8 @@ async function sendDynamicStoreHtml(req, res) {
 
     // Check if visiting a specific product e.g. /product/fortnite
     const url = req.originalUrl || req.url || '';
-    let pageTitle = `${storeName} — ${tagline}`;
+    let ogTitle = storeName;
+    let docTitle = `${storeName} — ${tagline}`;
     let pageDesc = tagline;
     let pageImage = logoUrl || 'https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=1200&q=80';
 
@@ -147,7 +148,8 @@ async function sendDynamicStoreHtml(req, res) {
       const slug = decodeURIComponent(prodMatch[1]);
       const product = dbHelper.getProductByIdOrSlug(slug);
       if (product) {
-        pageTitle = `${product.name_ar || product.name} | ${storeName}`;
+        ogTitle = product.name_ar || product.name;
+        docTitle = `${ogTitle} | ${storeName}`;
         pageDesc = product.description_ar || product.description || tagline;
         if (Array.isArray(product.images) && product.images.length > 0) {
           pageImage = product.images[0];
@@ -156,17 +158,17 @@ async function sendDynamicStoreHtml(req, res) {
     }
 
     const ogTags = `
-  <title>${escapeHtml(pageTitle)}</title>
+  <title>${escapeHtml(docTitle)}</title>
   <meta name="description" content="${escapeHtml(pageDesc)}">
   <!-- Open Graph / Discord / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="${escapeHtml(storeName)}">
-  <meta property="og:title" content="${escapeHtml(pageTitle)}">
+  <meta property="og:title" content="${escapeHtml(ogTitle)}">
   <meta property="og:description" content="${escapeHtml(pageDesc)}">
   <meta property="og:image" content="${escapeHtml(pageImage)}">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(pageTitle)}">
+  <meta name="twitter:title" content="${escapeHtml(ogTitle)}">
   <meta name="twitter:description" content="${escapeHtml(pageDesc)}">
   <meta name="twitter:image" content="${escapeHtml(pageImage)}">
     `.trim();

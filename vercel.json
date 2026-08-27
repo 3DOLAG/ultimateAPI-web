@@ -31,7 +31,7 @@
     },
     {
       "source": "/((?!api/|styles/|js/|uploads/|favicon|.*\\.[\\w]+$).*)",
-      "destination": "/api/index.js"
+      "destination": "/api/index.js?__vpath=/$1"
     }
   ]
 }

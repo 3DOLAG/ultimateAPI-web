@@ -57,8 +57,10 @@ export const blobService = {
 
     try {
       const { blobs } = await list({ prefix: 'settings/store-settings', token });
-      if (blobs.length > 0) {
-        const res = await fetch(blobs[0].url);
+      if (blobs && blobs.length > 0) {
+        // Sort by uploadedAt descending to guarantee the newest saved settings are read
+        const latest = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
+        const res = await fetch(`${latest.url}?_t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           _settingsCache = data;

@@ -12,13 +12,40 @@ export const storeRouter = express.Router();
  * Helper: merge settings from blob (persistent) → db (ephemeral) → env defaults
  */
 export async function getMergedSettings() {
+  const envSettings = {
+    store_name: config.store.name,
+    tagline: config.store.tagline,
+    logo_url: config.store.logoUrl,
+    currency: config.store.currency,
+    currency_symbol: config.store.currencySymbol,
+    support_whatsapp: config.store.whatsapp,
+    support_discord: config.store.discord,
+    support_tiktok: config.store.tiktok,
+    theme_preset: config.store.themePreset,
+    theme_primary_color: config.store.themePrimaryColor,
+    theme_primary_hover: config.store.themePrimaryHover,
+    theme_accent_color: config.store.themeAccentColor,
+    theme_bg_color: config.store.themeBgColor,
+    theme_surface_color: config.store.themeSurfaceColor
+  };
+
   const dbSettings = dbHelper.getStoreSettings();
   let blobSettings = null;
   try {
     blobSettings = await blobService.loadSettings();
   } catch (e) { /* blob not available */ }
-  // Blob wins over db, db wins over env defaults
-  return { ...dbSettings, ...(blobSettings || {}) };
+
+  const cleanBlob = {};
+  if (blobSettings && typeof blobSettings === 'object') {
+    for (const [k, v] of Object.entries(blobSettings)) {
+      if (v !== undefined && v !== null && String(v).trim() !== '') {
+        cleanBlob[k] = v;
+      }
+    }
+  }
+
+  // Blob wins over DB, DB wins over env defaults
+  return { ...envSettings, ...dbSettings, ...cleanBlob };
 }
 
 /**
