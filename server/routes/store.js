@@ -3,7 +3,8 @@ import { dbHelper } from '../db.js';
 import { stockValidator } from '../services/stockValidator.js';
 import { config } from '../config.js';
 import { generateDynamicCss, resolveTheme } from '../services/themeEngine.js';
-import { blobService } from ''../services/blobService.js;
+import { blobService } from '../services/blobService.js';
+import { syncEngine } from '../services/syncEngine.js';
 
 export const storeRouter = express.Router();
 
@@ -18,6 +19,21 @@ async function getMergedSettings() {
   } catch (e) { /* blob not available */ }
   // Blob wins over db, db wins over env defaults
   return { ...dbSettings, ...(blobSettings || {}) };
+}
+
+/**
+ * Helper: ensure database catalog is populated from supplier API if empty
+ */
+async function ensureCatalogSynced() {
+  const cats = dbHelper.getCategories('default', true);
+  if (!cats || cats.length === 0) {
+    try {
+      console.log('[Store] Empty catalog detected. Fetching live catalog from Supplier API...');
+      await syncEngine.runFullSync();
+    } catch (err) {
+      console.warn('[Store] Live catalog sync notice:', err.message);
+    }
+  }
 }
 
 /**
@@ -79,8 +95,9 @@ storeRouter.get(['/info', '/store/info'], async (req, res) => {
 /**
  * GET /api/categories & GET /api/categories/tree
  */
-storeRouter.get('/categories/tree', (req, res) => {
+storeRouter.get('/categories/tree', async (req, res) => {
   try {
+    await ensureCatalogSynced();
     const includeEmpty = req.query.includeEmpty === 'true' || req.query.all === 'true';
     const tree = dbHelper.getCategoryTree('default', !includeEmpty);
     res.json({ success: true, data: tree });
@@ -89,8 +106,9 @@ storeRouter.get('/categories/tree', (req, res) => {
   }
 });
 
-storeRouter.get('/categories', (req, res) => {
+storeRouter.get('/categories', async (req, res) => {
   try {
+    await ensureCatalogSynced();
     const includeEmpty = req.query.includeEmpty === 'true' || req.query.all === 'true';
     const categories = dbHelper.getCategories('default', !includeEmpty);
     res.json({ success: true, data: categories });
@@ -102,8 +120,9 @@ storeRouter.get('/categories', (req, res) => {
 /**
  * GET /api/categories/:slug
  */
-storeRouter.get('/categories/:slug', (req, res) => {
+storeRouter.get('/categories/:slug', async (req, res) => {
   try {
+    await ensureCatalogSynced();
     const slug = req.params.slug;
     const category = dbHelper.getCategoryBySlugOrId(slug);
     if (!category) {
@@ -132,8 +151,9 @@ storeRouter.get('/categories/:slug', (req, res) => {
 /**
  * GET /api/products
  */
-storeRouter.get('/products', (req, res) => {
+storeRouter.get('/products', async (req, res) => {
   try {
+    await ensureCatalogSynced();
     const { category, search, inStockOnly, sort, limit, offset } = req.query;
     const products = dbHelper.getProducts({
       category: category || 'all',
@@ -156,8 +176,9 @@ storeRouter.get('/products', (req, res) => {
 /**
  * GET /api/products/:slug
  */
-storeRouter.get('/products/:slug', (req, res) => {
+storeRouter.get('/products/:slug', async (req, res) => {
   try {
+    await ensureCatalogSynced();
     const slug = req.params.slug;
     const product = dbHelper.getProductByIdOrSlug(slug);
     if (!product) {

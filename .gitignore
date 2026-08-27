@@ -8,12 +8,14 @@ package-lock.json.log
 .env.*.local
 .env.example
 
-# Database & SQLite files
-data/*.sqlite
-data/*.sqlite3
-data/*.db-journal
-data/*.db-wal
-data/*.db-shm
+# Database & SQLite files (Serverless uses ephemeral memory + Vercel Blob)
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
 
 
 # Uploads & User Generated Files
