@@ -9,6 +9,7 @@ import { orderService } from '../services/orderService.js';
 import { syncEngine } from '../services/syncEngine.js';
 import { supplierApi } from '../services/supplierApi.js';
 import { blobService } from '../services/blobService.js';
+import { resolveTheme } from '../services/themeEngine.js';
 import { config } from '../config.js';
 
 const uploadLogoMulter = multer({
@@ -359,11 +360,31 @@ dashboardRouter.get('/logs', (req, res) => {
 dashboardRouter.get('/settings', (req, res) => {
   try {
     const settings = dbHelper.getStoreSettings();
+    const resolvedTheme = resolveTheme({
+      themePreset: settings.theme_preset || config.store.themePreset,
+      themePrimaryColor: settings.theme_primary_color || config.store.themePrimaryColor,
+      themePrimaryHover: settings.theme_primary_hover || config.store.themePrimaryHover,
+      themeAccentColor: settings.theme_accent_color || config.store.themeAccentColor,
+      themeBgColor: settings.theme_bg_color || config.store.themeBgColor,
+      themeSurfaceColor: settings.theme_surface_color || config.store.themeSurfaceColor
+    });
+
     res.json({
       success: true,
       data: {
         ...settings,
-        logo_url: settings.logo_url || config.store.logoUrl || ''
+        store_name: settings.store_name || config.store.name,
+        tagline: settings.tagline || config.store.tagline,
+        logo_url: settings.logo_url || config.store.logoUrl || '',
+        support_whatsapp: settings.support_whatsapp || config.store.whatsapp,
+        support_discord: settings.support_discord || config.store.discord,
+        support_tiktok: settings.support_tiktok || config.store.tiktok,
+        theme_bg_color: settings.theme_bg_color || config.store.themeBgColor || '#06080d',
+        theme_surface_color: settings.theme_surface_color || config.store.themeSurfaceColor || '#101622',
+        theme_accent_color: settings.theme_accent_color || config.store.themeAccentColor || '#6366f1',
+        theme_primary_color: settings.theme_primary_color || config.store.themePrimaryColor || '#6366f1',
+        theme_primary_hover: settings.theme_primary_hover || config.store.themePrimaryHover || '#4f46e5',
+        theme: resolvedTheme
       }
     });
   } catch (err) {

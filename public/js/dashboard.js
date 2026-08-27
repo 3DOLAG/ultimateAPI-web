@@ -65,8 +65,9 @@ const DashboardApp = {
       case 'catalog':
         this.loadCatalog();
         break;
+      case 'theme-colors':
       case 'users':
-        this.loadUsers();
+        this.loadThemeColors();
         break;
       case 'logs':
         this.loadLogs();
@@ -605,61 +606,135 @@ const DashboardApp = {
   },
 
   // -------------------------------------------------------------
-  // 6. Users Management
+  // 6. Theme Color System Customization
   // -------------------------------------------------------------
-  async loadUsers() {
-    const tbody = document.getElementById('usersTableBody');
-    if (!tbody) return;
-
+  async loadThemeColors() {
     try {
-      const res = await fetch('/api/dashboard/users');
+      const res = await fetch('/api/dashboard/settings');
       const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        tbody.innerHTML = json.data.map(u => `
-          <tr>
-            <td><strong>${u.name}</strong></td>
-            <td>${u.email}</td>
-            <td><span class="badge badge-primary">${u.role}</span></td>
-            <td><span class="badge badge-success">${u.status}</span></td>
-            <td style="font-size: 0.75rem; color: var(--text-tertiary);">${new Date(u.created_at).toLocaleDateString()}</td>
-          </tr>
-        `).join('');
+      if (json.success && json.data) {
+        const d = json.data;
+        const bg = d.theme_bg_color || (d.theme?.bgPrimary) || '#06080D';
+        const surface = d.theme_surface_color || (d.theme?.bgSurface) || '#101622';
+        const accent = d.theme_accent_color || (d.theme?.accent) || (d.theme?.primary) || '#6366F1';
+        const hover = d.theme_primary_hover || (d.theme?.hover) || '#4F46E5';
+
+        this.setThemeColorValue('themeBgColor', bg);
+        this.setThemeColorValue('themeSurfaceColor', surface);
+        this.setThemeColorValue('themeAccentColor', accent);
+        this.setThemeColorValue('themePrimaryHover', hover);
+
+        this.updateThemeLivePreview();
       }
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to load theme colors:', err);
+    }
   },
 
-  openNewUserModal() {
-    document.getElementById('userModal').classList.add('open');
+  setThemeColorValue(prefix, hex) {
+    if (!hex) return;
+    let formattedHex = hex.trim();
+    if (!formattedHex.startsWith('#')) formattedHex = '#' + formattedHex;
+    
+    const input = document.getElementById(`${prefix}Input`);
+    const picker = document.getElementById(`${prefix}Picker`);
+    const swatch = document.getElementById(`${prefix}Swatch`);
+
+    if (input) input.value = formattedHex.toUpperCase();
+    if (picker) {
+      if (/^#[0-9A-Fa-f]{6}$/.test(formattedHex)) {
+        picker.value = formattedHex;
+      }
+    }
+    if (swatch) swatch.style.background = formattedHex;
   },
 
-  closeUserModal() {
-    document.getElementById('userModal').classList.remove('open');
+  onThemeColorChange(inputId, hexValue) {
+    const input = document.getElementById(inputId);
+    if (input) input.value = hexValue.toUpperCase();
+    
+    const swatchId = inputId.replace('Input', 'Swatch');
+    const swatch = document.getElementById(swatchId);
+    if (swatch) swatch.style.background = hexValue;
+
+    this.updateThemeLivePreview();
   },
 
-  async saveUser(e) {
-    e.preventDefault();
+  onThemeHexChange(swatchId, pickerId, hexValue) {
+    let val = hexValue.trim();
+    if (!val.startsWith('#') && val.length > 0) val = '#' + val;
+
+    const swatch = document.getElementById(swatchId);
+    const picker = document.getElementById(pickerId);
+
+    if (swatch) swatch.style.background = val;
+    if (picker && /^#[0-9A-Fa-f]{6}$/.test(val)) {
+      picker.value = val;
+    }
+
+    this.updateThemeLivePreview();
+  },
+
+  updateThemeLivePreview() {
+    const bg = document.getElementById('themeBgColorInput')?.value || '#06080D';
+    const surface = document.getElementById('themeSurfaceColorInput')?.value || '#101622';
+    const accent = document.getElementById('themeAccentColorInput')?.value || '#6366F1';
+    const hover = document.getElementById('themePrimaryHoverInput')?.value || '#4F46E5';
+
+    const container = document.getElementById('themeLivePreviewContainer');
+    const card = document.getElementById('themeLivePreviewCard');
+    const btn = document.getElementById('themeLivePreviewBtn');
+    const badge = document.getElementById('themeLivePreviewBadge');
+
+    if (container) container.style.background = bg;
+    if (card) {
+      card.style.background = surface;
+      card.style.borderColor = accent + '44';
+    }
+    if (btn) {
+      btn.style.background = accent;
+      btn.style.boxShadow = `0 0 16px -2px ${accent}66`;
+    }
+    if (badge) {
+      badge.style.background = accent + '22';
+      badge.style.color = accent;
+      badge.style.borderColor = accent + '55';
+    }
+  },
+
+  async saveThemeColors() {
     const payload = {
-      name: document.getElementById('newUserName').value.trim(),
-      email: document.getElementById('newUserEmail').value.trim(),
-      password: document.getElementById('newUserPass').value,
-      role: document.getElementById('newUserRole').value
+      theme_bg_color: document.getElementById('themeBgColorInput')?.value.trim() || '#06080D',
+      theme_surface_color: document.getElementById('themeSurfaceColorInput')?.value.trim() || '#101622',
+      theme_accent_color: document.getElementById('themeAccentColorInput')?.value.trim() || '#6366F1',
+      theme_primary_color: document.getElementById('themeAccentColorInput')?.value.trim() || '#6366F1',
+      theme_primary_hover: document.getElementById('themePrimaryHoverInput')?.value.trim() || '#4F46E5'
     };
 
     try {
-      const res = await fetch('/api/dashboard/users', {
+      const res = await fetch('/api/dashboard/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const json = await res.json();
       if (json.success) {
-        this.showToast(`User ${payload.name} created!`, 'success');
-        this.closeUserModal();
-        this.loadUsers();
+        this.showToast('تم حفظ وتطبيق ألوان وهوية المتجر بنجاح 🎨', 'success');
+      } else {
+        throw new Error(json.error || 'Failed to save theme colors');
       }
     } catch (err) {
       this.showToast(`Error: ${err.message}`, 'error');
     }
+  },
+
+  resetThemeColors() {
+    this.setThemeColorValue('themeBgColor', '#06080D');
+    this.setThemeColorValue('themeSurfaceColor', '#101622');
+    this.setThemeColorValue('themeAccentColor', '#6366F1');
+    this.setThemeColorValue('themePrimaryHover', '#4F46E5');
+    this.updateThemeLivePreview();
+    this.showToast('تمت استعادة الألوان الافتراضية (اضغط حفظ لتطبيقها)', 'info');
   },
 
   // -------------------------------------------------------------

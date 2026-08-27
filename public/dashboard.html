@@ -37,8 +37,8 @@
         <button class="sidebar-btn" data-tab="catalog">
           <span>📦</span> Synced Catalog & Items
         </button>
-        <button class="sidebar-btn" data-tab="users">
-          <span>👥</span> RBAC Team & Users
+        <button class="sidebar-btn" data-tab="theme-colors">
+          <span>🎨</span> Theme Color System
         </button>
         <button class="sidebar-btn" data-tab="logs">
           <span>📡</span> Webhooks & Audit Logs
@@ -167,32 +167,109 @@
         </div>
 
         <!-- =================================================== -->
-        <!-- TAB 6: RBAC USERS -->
+        <!-- TAB 6: THEME COLOR SYSTEM -->
         <!-- =================================================== -->
-        <div id="tab-users" class="dashboard-tab-content">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div>
-              <h2 style="font-size: 1.3rem; font-weight: 700;">Team & Role-Based Access Control</h2>
-              <p style="color: var(--text-secondary); font-size: 0.875rem;">Manage dashboard administrators, order managers, and support agents.</p>
+        <div id="tab-theme-colors" class="dashboard-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🎨</span>
+              <h2 style="font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">THEME COLOR SYSTEM</h2>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="DashboardApp.openNewUserModal()">+ Add Team Member</button>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.resetThemeColors()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                RESET DEFAULT COLORS
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="DashboardApp.saveThemeColors()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px;">
+                SAVE THEME COLORS 💾
+              </button>
+            </div>
           </div>
 
-          <div class="data-table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Joined</th>
-                </tr>
-              </thead>
-              <tbody id="usersTableBody">
-                <!-- Injected via JS -->
-              </tbody>
-            </table>
+          <div class="theme-color-system-container" style="display: flex; flex-direction: column; gap: 14px;">
+            
+            <!-- MAIN BACKGROUND -->
+            <div class="theme-color-card">
+              <div class="theme-color-info">
+                <h4>MAIN BACKGROUND</h4>
+                <p>The primary background color of the store.</p>
+              </div>
+              <div class="theme-color-controls">
+                <div class="color-swatch-picker" title="Click to choose color">
+                  <input type="color" id="themeBgColorPicker" oninput="DashboardApp.onThemeColorChange('themeBgColorInput', this.value)">
+                  <div id="themeBgColorSwatch" class="color-swatch-fill" style="background: #06080d;"></div>
+                </div>
+                <input type="text" id="themeBgColorInput" value="#06080D" class="theme-hex-input" oninput="DashboardApp.onThemeHexChange('themeBgColorSwatch', 'themeBgColorPicker', this.value)">
+              </div>
+            </div>
+
+            <!-- SECONDARY SURFACE -->
+            <div class="theme-color-card">
+              <div class="theme-color-info">
+                <h4>SECONDARY SURFACE</h4>
+                <p>Background color for cards, borders, and inputs.</p>
+              </div>
+              <div class="theme-color-controls">
+                <div class="color-swatch-picker" title="Click to choose color">
+                  <input type="color" id="themeSurfaceColorPicker" oninput="DashboardApp.onThemeColorChange('themeSurfaceColorInput', this.value)">
+                  <div id="themeSurfaceColorSwatch" class="color-swatch-fill" style="background: #101622;"></div>
+                </div>
+                <input type="text" id="themeSurfaceColorInput" value="#101622" class="theme-hex-input" oninput="DashboardApp.onThemeHexChange('themeSurfaceColorSwatch', 'themeSurfaceColorPicker', this.value)">
+              </div>
+            </div>
+
+            <!-- ACCENT COLOR -->
+            <div class="theme-color-card">
+              <div class="theme-color-info">
+                <h4>ACCENT COLOR</h4>
+                <p>Color used for highlights, badges, and accents.</p>
+              </div>
+              <div class="theme-color-controls">
+                <div class="color-swatch-picker" title="Click to choose color">
+                  <input type="color" id="themeAccentColorPicker" oninput="DashboardApp.onThemeColorChange('themeAccentColorInput', this.value)">
+                  <div id="themeAccentColorSwatch" class="color-swatch-fill" style="background: #6366f1;"></div>
+                </div>
+                <input type="text" id="themeAccentColorInput" value="#6366F1" class="theme-hex-input" oninput="DashboardApp.onThemeHexChange('themeAccentColorSwatch', 'themeAccentColorPicker', this.value)">
+              </div>
+            </div>
+
+            <!-- PRIMARY BUTTON / HOVER COLOR -->
+            <div class="theme-color-card">
+              <div class="theme-color-info">
+                <h4>PRIMARY BUTTON / HOVER COLOR</h4>
+                <p>Primary action buttons and hover glow state.</p>
+              </div>
+              <div class="theme-color-controls">
+                <div class="color-swatch-picker" title="Click to choose color">
+                  <input type="color" id="themePrimaryHoverPicker" oninput="DashboardApp.onThemeColorChange('themePrimaryHoverInput', this.value)">
+                  <div id="themePrimaryHoverSwatch" class="color-swatch-fill" style="background: #4f46e5;"></div>
+                </div>
+                <input type="text" id="themePrimaryHoverInput" value="#4F46E5" class="theme-hex-input" oninput="DashboardApp.onThemeHexChange('themePrimaryHoverSwatch', 'themePrimaryHoverPicker', this.value)">
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Live Theme Preview -->
+          <div style="margin-top: 28px; padding: 22px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface); max-width: 960px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h4 style="font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin: 0;">Live Theme Preview</h4>
+              <span style="font-size: 0.75rem; color: var(--text-tertiary);">Interactive real-time mockup</span>
+            </div>
+            <div id="themeLivePreviewContainer" style="padding: 24px; border-radius: var(--radius-sm); display: flex; gap: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #06080d; border: 1px solid rgba(255,255,255,0.1);">
+              <div id="themeLivePreviewCard" style="background: #101622; padding: 16px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); flex: 1; min-width: 260px;">
+                <div id="themeLivePreviewTitle" style="font-size: 1.05rem; font-weight: 700; color: #fff;">Preview Store Product Card</div>
+                <div style="font-size: 0.813rem; color: #94a3b8; margin-top: 4px;">Instant real-time reflection of your customized palette.</div>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <button id="themeLivePreviewBtn" class="btn" style="background: #6366f1; color: #fff; font-weight: 600; padding: 9px 20px; border-radius: 8px; border: none; box-shadow: 0 0 16px -2px rgba(99,102,241,0.4);">
+                  Sample Button
+                </button>
+                <span id="themeLivePreviewBadge" class="badge" style="background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.35); padding: 5px 12px; border-radius: 6px; font-weight: 600;">
+                  Accent Badge
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -341,38 +418,6 @@
           <textarea id="pmInstructionsAr" class="form-input" rows="2" placeholder="قم بالتحويل على هذا الرقم..."></textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-block" style="margin-top: 14px;">Save Payment Method</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- New User Modal -->
-  <div class="modal-backdrop" id="userModal">
-    <div class="modal-dialog">
-      <button class="modal-close-btn" onclick="DashboardApp.closeUserModal()">✕</button>
-      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px;">Add RBAC Team Member</h3>
-      <form onsubmit="DashboardApp.saveUser(event)">
-        <div class="form-group">
-          <label class="form-label">Full Name</label>
-          <input type="text" id="newUserName" class="form-input" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" id="newUserEmail" class="form-input" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" id="newUserPass" class="form-input" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Role</label>
-          <select id="newUserRole" class="form-input">
-            <option value="ADMIN">ADMIN (Full management)</option>
-            <option value="ORDER_MANAGER">ORDER_MANAGER (Orders & proofs)</option>
-            <option value="PAYMENT_MANAGER">PAYMENT_MANAGER (Approve payments)</option>
-            <option value="SUPPORT">SUPPORT (View orders)</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 14px;">Create Team Member</button>
       </form>
     </div>
   </div>

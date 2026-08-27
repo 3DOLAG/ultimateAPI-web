@@ -344,3 +344,103 @@
     padding: 16px;
   }
 }
+
+/* ===================================================
+   THEME COLOR SYSTEM STYLES
+   =================================================== */
+.theme-color-system-container {
+  max-width: 960px;
+}
+
+.theme-color-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.theme-color-card:hover {
+  border-color: var(--border-color);
+}
+
+.theme-color-info h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.theme-color-info p {
+  color: var(--text-secondary);
+  font-size: 0.813rem;
+  margin: 0;
+}
+
+.theme-color-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.color-swatch-picker {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.color-swatch-picker:hover {
+  transform: scale(1.08);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.color-swatch-picker input[type="color"] {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 60px;
+  height: 60px;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.color-swatch-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.theme-hex-input {
+  width: 120px;
+  text-transform: uppercase;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.theme-hex-input:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+}
+

@@ -10,9 +10,18 @@ export const storeRouter = express.Router();
  * GET /api/theme.css & /theme.css
  */
 storeRouter.get(['/theme.css', '/theme/style.css'], (req, res) => {
+  const settings = dbHelper.getStoreSettings();
+  const themeConfig = {
+    themePreset: settings.theme_preset || config.store.themePreset,
+    themePrimaryColor: settings.theme_primary_color || config.store.themePrimaryColor,
+    themePrimaryHover: settings.theme_primary_hover || config.store.themePrimaryHover,
+    themeAccentColor: settings.theme_accent_color || config.store.themeAccentColor,
+    themeBgColor: settings.theme_bg_color || config.store.themeBgColor,
+    themeSurfaceColor: settings.theme_surface_color || config.store.themeSurfaceColor
+  };
   res.setHeader('Content-Type', 'text/css');
-  res.setHeader('Cache-Control', 'public, max-age=60');
-  res.send(generateDynamicCss(config.store));
+  res.setHeader('Cache-Control', 'public, max-age=10');
+  res.send(generateDynamicCss(themeConfig));
 });
 
 /**
@@ -20,6 +29,14 @@ storeRouter.get(['/theme.css', '/theme/style.css'], (req, res) => {
  */
 storeRouter.get(['/info', '/store/info'], (req, res) => {
   const settings = dbHelper.getStoreSettings();
+  const themeConfig = {
+    themePreset: settings.theme_preset || config.store.themePreset,
+    themePrimaryColor: settings.theme_primary_color || config.store.themePrimaryColor,
+    themePrimaryHover: settings.theme_primary_hover || config.store.themePrimaryHover,
+    themeAccentColor: settings.theme_accent_color || config.store.themeAccentColor,
+    themeBgColor: settings.theme_bg_color || config.store.themeBgColor,
+    themeSurfaceColor: settings.theme_surface_color || config.store.themeSurfaceColor
+  };
   res.json({
     success: true,
     data: {
@@ -31,7 +48,7 @@ storeRouter.get(['/info', '/store/info'], (req, res) => {
       support_whatsapp: settings.support_whatsapp || config.store.whatsapp,
       support_discord: settings.support_discord || config.store.discord,
       support_tiktok: settings.support_tiktok || config.store.tiktok,
-      theme: resolveTheme(config.store)
+      theme: resolveTheme(themeConfig)
     }
   });
 });
