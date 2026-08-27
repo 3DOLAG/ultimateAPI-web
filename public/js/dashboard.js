@@ -815,8 +815,9 @@ const DashboardApp = {
     const img = document.getElementById('dashSidebarLogoImg');
     const nameEl = document.getElementById('dashSidebarStoreName');
 
-    if (nameEl && data.store_name) {
-      nameEl.textContent = data.store_name;
+    if (data.store_name) {
+      if (nameEl) nameEl.textContent = data.store_name;
+      document.title = `لوحة التحكم الإدارية | ${data.store_name}`;
     }
 
     if (img && mark) {

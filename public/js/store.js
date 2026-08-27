@@ -135,9 +135,21 @@ const StoreApp = {
   // -------------------------------------------------------------
   // 1. Store Info, Home View & Dynamic Category Navigation
   // -------------------------------------------------------------
+  updateDocumentTitle(pageTitle = '') {
+    const info = this.state.storeInfo;
+    const storeName = info?.name || 'AURA Store';
+    const tagline = info?.tagline ? ` — ${info.tagline}` : '';
+    if (!pageTitle) {
+      document.title = `${storeName}${tagline}`;
+    } else {
+      document.title = `${pageTitle} | ${storeName}`;
+    }
+  },
+
   renderHomeView() {
     const homeView = document.getElementById('view-home');
     if (homeView) homeView.style.display = 'block';
+    this.updateDocumentTitle();
     if (this.state.products && this.state.products.length > 0) {
       this.renderProductsGrid(this.state.products, 'homeProductsGrid');
     } else {
@@ -152,6 +164,9 @@ const StoreApp = {
       if (json.success && json.data) {
         this.state.storeInfo = json.data;
         document.querySelectorAll('.store-name-text').forEach(el => el.textContent = json.data.name);
+
+        // Dynamic Browser Tab Title Sync
+        this.updateDocumentTitle();
 
         // Dynamic Theme Colors Application
         if (json.data.theme) {
@@ -452,6 +467,7 @@ const StoreApp = {
         const { category, subcategories, products } = json.data;
         titleEl.textContent = category.name_ar || category.name;
         descEl.textContent = category.description || '';
+        this.updateDocumentTitle(category.name_ar || category.name);
 
         if (Array.isArray(subcategories) && subcategories.length > 0) {
           subChips.innerHTML = subcategories.map(sub => `
@@ -481,6 +497,7 @@ const StoreApp = {
       if (json.success && json.data) {
         const p = json.data;
         this.state.currentProduct = p;
+        this.updateDocumentTitle(p.name_ar || p.name);
 
         const imgEl = document.getElementById('productDetailImg');
         const imgUrl = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=800&q=80';
@@ -950,6 +967,7 @@ const StoreApp = {
   // -------------------------------------------------------------
   renderCheckoutView() {
     document.getElementById('view-checkout').style.display = 'block';
+    this.updateDocumentTitle('تأكيد بيانات الطلب');
     const item = this.state.checkoutItem;
 
     if (!item) {
@@ -1076,6 +1094,7 @@ const StoreApp = {
   // -------------------------------------------------------------
   async renderPaymentView(orderId) {
     document.getElementById('view-payment').style.display = 'block';
+    this.updateDocumentTitle(`إتمام الدفع - طلب #${orderId}`);
     
     try {
       const [orderRes, pmRes] = await Promise.all([
@@ -1245,6 +1264,7 @@ const StoreApp = {
   renderSuccessView(orderId) {
     const successView = document.getElementById('view-success');
     if (successView) successView.style.display = 'block';
+    this.updateDocumentTitle(`تم إرسال الطلب #${orderId}`);
 
     const idEl = document.getElementById('successOrderIdText');
     if (idEl) idEl.textContent = orderId || 'RSL-00000';
@@ -1262,10 +1282,12 @@ const StoreApp = {
   // -------------------------------------------------------------
   renderLoginView() {
     document.getElementById('view-login').style.display = 'block';
+    this.updateDocumentTitle('تسجيل الدخول');
   },
 
   renderRegisterView() {
     document.getElementById('view-register').style.display = 'block';
+    this.updateDocumentTitle('إنشاء حساب جديد');
   },
 
   async handleLogin(e) {
