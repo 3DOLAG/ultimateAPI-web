@@ -29,7 +29,8 @@ export const blobService = {
         access: 'public',
         contentType: 'application/json',
         token,
-        addRandomSuffix: false
+        addRandomSuffix: false,
+        allowOverwrite: true
       });
       // Update cache
       _settingsCache = settingsObj;

@@ -15,6 +15,7 @@ import { paymentMethodsRouter } from './routes/paymentMethods.js';
 import { authRouter } from './routes/auth.js';
 import { dashboardRouter } from './routes/dashboard.js';
 import { webhooksRouter } from './routes/webhooks.js';
+import { verifyToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,9 +69,9 @@ app.get('/api/v1/items/:id/availability', async (req, res) => {
 // Admin Login Page Route
 app.get(['/admin/login', '/admin/login/'], (req, res) => {
   const token = req.cookies?.auth_token || req.headers.authorization?.replace(/^Bearer\s+/i, '');
-  const user = token ? dbHelper.getUserBySession(token) : null;
+  const user = token ? (verifyToken(token) || dbHelper.getUserBySession(token)) : null;
 
-  if (user && user.status === 'active' && (user.role === 'OWNER' || user.role === 'ADMIN')) {
+  if (user && (user.role === 'OWNER' || user.role === 'ADMIN')) {
     return res.redirect('/admin');
   }
 
@@ -85,7 +86,7 @@ app.get(['/admin/login', '/admin/login/'], (req, res) => {
 app.get(['/admin/logout', '/admin/logout/'], (req, res) => {
   const token = req.cookies?.auth_token || req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (token) {
-    dbHelper.deleteSession(token);
+    try { dbHelper.deleteSession(token); } catch {}
   }
   res.clearCookie('auth_token');
   return res.redirect('/admin/login');
@@ -94,9 +95,9 @@ app.get(['/admin/logout', '/admin/logout/'], (req, res) => {
 // Protected Admin / Dashboard HTML Routes
 app.get(['/admin', '/admin/*', '/dashboard', '/dashboard/*'], (req, res) => {
   const token = req.cookies?.auth_token || req.headers.authorization?.replace(/^Bearer\s+/i, '');
-  const user = token ? dbHelper.getUserBySession(token) : null;
+  const user = token ? (verifyToken(token) || dbHelper.getUserBySession(token)) : null;
 
-  if (!user || user.status !== 'active' || (user.role !== 'OWNER' && user.role !== 'ADMIN')) {
+  if (!user || (user.role !== 'OWNER' && user.role !== 'ADMIN')) {
     return res.redirect('/admin/login');
   }
 

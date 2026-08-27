@@ -1,5 +1,46 @@
+import crypto from 'crypto';
 import { dbHelper } from '../db.js';
 import { config } from '../config.js';
+
+/**
+ * Sign a stateless session payload with HMAC-SHA256 (for serverless persistence)
+ */
+export function signToken(payload) {
+  const secret = config.admin.sessionSecret || 'fallback_secret_key_change_me';
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', secret).update(data).digest('base64url');
+  return `${data}.${signature}`;
+}
+
+/**
+ * Verify and decode a stateless HMAC-SHA256 signed session token
+ */
+export function verifyToken(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [data, signature] = parts;
+  if (!data || !signature) return null;
+
+  const secret = config.admin.sessionSecret || 'fallback_secret_key_change_me';
+  const expectedSignature = crypto.createHmac('sha256', secret).update(data).digest('base64url');
+  
+  try {
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+    if (payload.exp && payload.exp < Date.now()) {
+      return null; // Expired token
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 export function requireAuth(req, res, next) {
   // 1. Check API Key Header (for programmatic/automated testing access)
@@ -27,19 +68,27 @@ export function requireAuth(req, res, next) {
     });
   }
 
-  const user = dbHelper.getUserBySession(token);
-  if (!user || user.status !== 'active') {
-    return res.status(401).json({
-      success: false,
-      error: {
-        code: 'INVALID_SESSION',
-        message: 'Your session has expired or is invalid. Please sign in again.'
-      }
-    });
+  // A. Verify Stateless Cryptographic Token (Permanent across Vercel Lambdas)
+  const signedUser = verifyToken(token);
+  if (signedUser && signedUser.role) {
+    req.user = signedUser;
+    return next();
   }
 
-  req.user = user;
-  next();
+  // B. Fallback to SQLite DB Session lookup (Local environment)
+  const user = dbHelper.getUserBySession(token);
+  if (user && user.status === 'active') {
+    req.user = user;
+    return next();
+  }
+
+  return res.status(401).json({
+    success: false,
+    error: {
+      code: 'INVALID_SESSION',
+      message: 'Your session has expired or is invalid. Please sign in again.'
+    }
+  });
 }
 
 /**

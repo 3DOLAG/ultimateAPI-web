@@ -721,10 +721,11 @@ const DashboardApp = {
       if (json.success) {
         this.showToast('تم حفظ وتطبيق ألوان وهوية المتجر بنجاح 🎨', 'success');
       } else {
-        throw new Error(json.error || 'Failed to save theme colors');
+        const msg = (typeof json.error === 'object' ? json.error?.message : json.error) || 'فشل حفظ ألوان المتجر';
+        throw new Error(msg);
       }
     } catch (err) {
-      this.showToast(`Error: ${err.message}`, 'error');
+      this.showToast(`خطأ: ${err.message}`, 'error');
     }
   },
 
@@ -914,10 +915,11 @@ const DashboardApp = {
         this.showToast('تم حفظ كافة إعدادات وهيكل المتجر بنجاح', 'success');
         this.applySidebarBranding(payload);
       } else {
-        throw new Error(json.error || 'Failed to save settings');
+        const msg = (typeof json.error === 'object' ? json.error?.message : json.error) || 'فشل حفظ الإعدادات';
+        throw new Error(msg);
       }
     } catch (err) {
-      this.showToast(`Error: ${err.message}`, 'error');
+      this.showToast(`خطأ: ${err.message}`, 'error');
     }
   },
 

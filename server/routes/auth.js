@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { dbHelper } from '../db.js';
 import { config } from '../config.js';
 import { createRateLimiter } from '../middleware/rateLimit.js';
+import { signToken } from '../middleware/auth.js';
 
 export const authRouter = express.Router();
 
@@ -142,15 +143,34 @@ authRouter.get('/discord/callback', oauthRateLimiter, async (req, res) => {
     }
 
     // 4. Authorized Admin: Upsert user record safely and create secure session
-    const adminUser = dbHelper.upsertDiscordAdmin({
-      discordId: discordUser.id,
+    let adminUser = null;
+    try {
+      adminUser = dbHelper.upsertDiscordAdmin({
+        discordId: discordUser.id,
+        username: discordUser.username,
+        globalName: discordUser.global_name,
+        avatar: discordUser.avatar
+      });
+    } catch (dbErr) {
+      console.warn('[Discord OAuth] DB upsert notice:', dbErr.message);
+    }
+
+    // Stateless signed token (Works across ALL serverless instances and cold starts)
+    const sessionToken = signToken({
+      id: adminUser?.id || 'usr_owner_001',
+      name: adminUser?.name || discordUser.username,
       username: discordUser.username,
-      globalName: discordUser.global_name,
-      avatar: discordUser.avatar
+      discord_id: discordUser.id,
+      role: 'OWNER',
+      status: 'active',
+      permissions: ['*'],
+      exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
-    // Session rotation: create cryptographically secure session
-    const sessionToken = dbHelper.createSession(adminUser.id, 7);
+    // Also record in local DB if available
+    try {
+      dbHelper.createSession(adminUser?.id || 'usr_owner_001', 7);
+    } catch {}
 
     // Set secure authentication cookie
     res.cookie('auth_token', sessionToken, {
@@ -160,7 +180,7 @@ authRouter.get('/discord/callback', oauthRateLimiter, async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
-    console.log(`[Security Audit] ✅ Admin authenticated successfully via Discord: ${adminUser.name} (${discordUser.id})`);
+    console.log(`[Security Audit] ✅ Admin authenticated successfully via Discord: ${discordUser.username} (${discordUser.id})`);
     return res.redirect('/admin');
   } catch (err) {
     console.error('[Discord OAuth] Unexpected error in callback:', err);
