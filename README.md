@@ -1,4 +1,4 @@
-# AURA Game - Reseller Store Platform
+# Gaming Game - Reseller Store Platform
 
 A modern e-commerce and reseller platform for digital gaming cards, game top-ups, software licenses, and subscription codes.
 

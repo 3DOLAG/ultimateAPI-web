@@ -9,7 +9,7 @@ async function runTest() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      email: 'admin@aurastore.eg',
+      email: 'admin@Gamingstore.eg',
       password: 'Admin@12345'
     })
   });
@@ -70,12 +70,12 @@ async function runTest() {
       Cookie: loginCookie
     },
     body: JSON.stringify({
-      store_name: 'AURA Supreme Gaming',
+      store_name: 'Gaming Supreme Gaming',
       tagline: 'Premier Gaming & Digital Hub',
       logo_url: customUrl,
       support_whatsapp: '+201001234567',
-      support_discord: 'https://discord.gg/aurastore',
-      support_tiktok: 'https://tiktok.com/@aurastore'
+      support_discord: 'https://discord.gg/Gamingstore',
+      support_tiktok: 'https://tiktok.com/@Gamingstore'
     })
   });
   const saveJson = await saveRes.json();
@@ -85,7 +85,7 @@ async function runTest() {
 
   const infoRes2 = await fetch('http://localhost:3000/api/store/info');
   const infoJson2 = await infoRes2.json();
-  if (infoJson2.data.logo_url !== customUrl || infoJson2.data.name !== 'AURA Supreme Gaming') {
+  if (infoJson2.data.logo_url !== customUrl || infoJson2.data.name !== 'Gaming Supreme Gaming') {
     throw new Error('Store info does not reflect updated settings');
   }
   console.log('✅ 5. Custom logo URL and store settings successfully updated and verified');

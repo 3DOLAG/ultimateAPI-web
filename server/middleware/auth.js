@@ -24,7 +24,7 @@ export function verifyToken(token) {
 
   const secret = config.admin.sessionSecret || 'fallback_secret_key_change_me';
   const expectedSignature = crypto.createHmac('sha256', secret).update(data).digest('base64url');
-  
+
   try {
     const sigBuf = Buffer.from(signature);
     const expBuf = Buffer.from(expectedSignature);
@@ -49,7 +49,7 @@ export function requireAuth(req, res, next) {
     req.user = {
       id: 'usr_admin_key',
       name: 'System Admin API',
-      email: 'admin@aurastore.eg',
+      email: 'admin@Gamingstore.eg',
       role: 'OWNER',
       permissions: ['*']
     };

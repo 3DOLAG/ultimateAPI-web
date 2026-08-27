@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AURA Control Console — Reseller Infrastructure Management</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✦</text></svg>">
+  <title>Gaming Control Console — Reseller Infrastructure Management</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✦</text></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/styles/theme.css">
   <link rel="stylesheet" href="/api/theme.css">
   <link rel="stylesheet" href="/styles/dashboard.css">
 </head>
+
 <body>
 
   <div class="dashboard-app">
@@ -20,9 +25,12 @@
     <aside class="dashboard-sidebar">
       <div class="sidebar-brand">
         <div class="brand-mark" id="dashSidebarMark" style="background: var(--accent-primary);">✦</div>
-        <img id="dashSidebarLogoImg" class="brand-logo-img" style="display: none; max-height: 34px; max-width: 120px;" alt="Logo">
+        <img id="dashSidebarLogoImg" class="brand-logo-img" style="display: none; max-height: 34px; max-width: 120px;"
+          alt="Logo">
         <div>
-          <strong id="dashSidebarStoreName" style="font-size: 0.95rem; color: var(--text-primary); display: block; line-height: 1.2;">AURA Console</strong>
+          <strong id="dashSidebarStoreName"
+            style="font-size: 0.95rem; color: var(--text-primary); display: block; line-height: 1.2;">Gaming
+            Console</strong>
           <div style="font-size: 0.72rem; color: var(--text-tertiary);">Private Reseller Engine</div>
         </div>
       </div>
@@ -63,7 +71,8 @@
       <header class="dashboard-topbar">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span class="pulse-dot"></span>
-          <span style="font-size: 0.813rem; color: var(--text-secondary);">Authoritative Supplier Gateway: <strong style="color: var(--success);" id="topSupplierHealth">Online (18ms)</strong></span>
+          <span style="font-size: 0.813rem; color: var(--text-secondary);">Authoritative Supplier Gateway: <strong
+              style="color: var(--success);" id="topSupplierHealth">Online (18ms)</strong></span>
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -81,7 +90,9 @@
           <div style="margin-bottom: 20px;">
             <h2 style="font-size: 1.3rem; font-weight: 700;">Category Profit Margins (Pricing Engine)</h2>
             <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">
-              Configure profit margin % per category. When you update a margin, all products and variant items belonging to that category automatically update their customer-facing price across the entire storefront immediately.
+              Configure profit margin % per category. When you update a margin, all products and variant items belonging
+              to that category automatically update their customer-facing price across the entire storefront
+              immediately.
             </p>
           </div>
 
@@ -110,9 +121,11 @@
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div>
               <h2 style="font-size: 1.3rem; font-weight: 700;">Payment Methods Management</h2>
-              <p style="color: var(--text-secondary); font-size: 0.875rem;">Manage transfer destinations shown to customers (Vodafone Cash, InstaPay, Bank Transfer).</p>
+              <p style="color: var(--text-secondary); font-size: 0.875rem;">Manage transfer destinations shown to
+                customers (Vodafone Cash, InstaPay, Bank Transfer).</p>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="DashboardApp.openNewPaymentMethodModal()">+ Add Method</button>
+            <button class="btn btn-primary btn-sm" onclick="DashboardApp.openNewPaymentMethodModal()">+ Add
+              Method</button>
           </div>
 
           <div class="data-table-wrap">
@@ -137,35 +150,44 @@
         <!-- TAB 5: CATALOG & VISIBILITY CONTROL -->
         <!-- =================================================== -->
         <div id="tab-catalog" class="dashboard-tab-content">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
             <div>
               <h2 style="font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                 <span>📦</span> <span>إدارة الكتالوج وإظهار/إخفاء المنتجات والأقسام</span>
               </h2>
-              <p style="color: var(--text-secondary); font-size: 0.875rem;">تحكم في ظهور أو إخفاء أي منتج أو قسم بالكامل من واجهة المتجر بنقرة واحدة.</p>
+              <p style="color: var(--text-secondary); font-size: 0.875rem;">تحكم في ظهور أو إخفاء أي منتج أو قسم بالكامل
+                من واجهة المتجر بنقرة واحدة.</p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.triggerFullSync()" style="display: inline-flex; align-items: center; gap: 6px;">
+              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.triggerFullSync()"
+                style="display: inline-flex; align-items: center; gap: 6px;">
                 <span>🔄</span> <span>تحديث الكتالوج من المورّد</span>
               </button>
             </div>
           </div>
 
           <!-- Catalog Metrics & Visibility Sub-Tabs -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
             <div style="display: flex; gap: 8px;">
-              <button id="btnCatalogTabProducts" class="btn btn-sm" onclick="DashboardApp.switchCatalogSubTab('products')" style="background: var(--accent-primary); color: #fff; border: 1px solid var(--border-accent); font-weight: 700;">
+              <button id="btnCatalogTabProducts" class="btn btn-sm"
+                onclick="DashboardApp.switchCatalogSubTab('products')"
+                style="background: var(--accent-primary); color: #fff; border: 1px solid var(--border-accent); font-weight: 700;">
                 🎮 المنتجات (<span id="catalogProductsTotalCount">0</span>)
               </button>
-              <button id="btnCatalogTabCategories" class="btn btn-sm btn-secondary" onclick="DashboardApp.switchCatalogSubTab('categories')" style="font-weight: 600;">
+              <button id="btnCatalogTabCategories" class="btn btn-sm btn-secondary"
+                onclick="DashboardApp.switchCatalogSubTab('categories')" style="font-weight: 600;">
                 📁 الأقسام والتصنيفات (<span id="catalogCategoriesTotalCount">0</span>)
               </button>
             </div>
 
             <!-- Search & Filters -->
             <div style="display: flex; gap: 10px; align-items: center; flex: 1; max-width: 500px;">
-              <input type="text" id="catalogSearchInput" class="form-input" placeholder="🔍 بحث بالاسم أو القسم..." oninput="DashboardApp.filterCatalogTable()" style="padding: 7px 12px; font-size: 0.84rem;">
-              <select id="catalogVisibilityFilter" class="form-input" onchange="DashboardApp.filterCatalogTable()" style="width: auto; min-width: 140px; padding: 7px 12px; font-size: 0.84rem;">
+              <input type="text" id="catalogSearchInput" class="form-input" placeholder="🔍 بحث بالاسم أو القسم..."
+                oninput="DashboardApp.filterCatalogTable()" style="padding: 7px 12px; font-size: 0.84rem;">
+              <select id="catalogVisibilityFilter" class="form-input" onchange="DashboardApp.filterCatalogTable()"
+                style="width: auto; min-width: 140px; padding: 7px 12px; font-size: 0.84rem;">
                 <option value="all">جميع الحالات</option>
                 <option value="visible">المعروض فقط 👁️</option>
                 <option value="hidden">المخفي فقط 🚫</option>
@@ -217,24 +239,33 @@
         <!-- TAB 6: THEME COLOR SYSTEM -->
         <!-- =================================================== -->
         <div id="tab-theme-colors" class="dashboard-tab-content">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <span style="font-size: 1.4rem;">🎨</span>
-              <h2 style="font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">THEME COLOR SYSTEM</h2>
+              <h2
+                style="font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">
+                THEME COLOR SYSTEM</h2>
             </div>
             <div style="display: flex; gap: 10px;">
-              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.resetThemeColors()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.resetThemeColors()"
+                style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
                 RESET DEFAULT COLORS
               </button>
-              <button class="btn btn-primary btn-sm" onclick="DashboardApp.saveThemeColors()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px;">
+              <button class="btn btn-primary btn-sm" onclick="DashboardApp.saveThemeColors()"
+                style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px;">
                 SAVE THEME COLORS 💾
               </button>
             </div>
           </div>
 
           <div class="theme-color-system-container" style="display: flex; flex-direction: column; gap: 14px;">
-            
+
             <!-- MAIN BACKGROUND -->
             <div class="theme-color-card">
               <div class="theme-color-info">
@@ -243,10 +274,12 @@
               </div>
               <div class="theme-color-controls">
                 <div class="color-swatch-picker" title="Click to choose color">
-                  <input type="color" id="themeBgColorPicker" oninput="DashboardApp.onThemeColorChange('themeBgColorInput', this.value)">
+                  <input type="color" id="themeBgColorPicker"
+                    oninput="DashboardApp.onThemeColorChange('themeBgColorInput', this.value)">
                   <div id="themeBgColorSwatch" class="color-swatch-fill" style="background: #06080d;"></div>
                 </div>
-                <input type="text" id="themeBgColorInput" value="#06080D" class="theme-hex-input" oninput="DashboardApp.onThemeHexChange('themeBgColorSwatch', 'themeBgColorPicker', this.value)">
+                <input type="text" id="themeBgColorInput" value="#06080D" class="theme-hex-input"
+                  oninput="DashboardApp.onThemeHexChange('themeBgColorSwatch', 'themeBgColorPicker', this.value)">
               </div>
             </div>
 
@@ -258,10 +291,12 @@
               </div>
               <div class="theme-color-controls">
                 <div class="color-swatch-picker" title="Click to choose color">
-                  <input type="color" id="themeSurfaceColorPicker" oninput="DashboardApp.onThemeColorChange('themeSurfaceColorInput', this.value)">
+                  <input type="color" id="themeSurfaceColorPicker"
+                    oninput="DashboardApp.onThemeColorChange('themeSurfaceColorInput', this.value)">
                   <div id="themeSurfaceColorSwatch" class="color-swatch-fill" style="background: #101622;"></div>
                 </div>
-                <input type="text" id="themeSurfaceColorInput" value="#101622" class="theme-hex-input" oninput="DashboardApp.onThemeHexChange('themeSurfaceColorSwatch', 'themeSurfaceColorPicker', this.value)">
+                <input type="text" id="themeSurfaceColorInput" value="#101622" class="theme-hex-input"
+                  oninput="DashboardApp.onThemeHexChange('themeSurfaceColorSwatch', 'themeSurfaceColorPicker', this.value)">
               </div>
             </div>
 
@@ -273,10 +308,12 @@
               </div>
               <div class="theme-color-controls">
                 <div class="color-swatch-picker" title="Click to choose color">
-                  <input type="color" id="themeAccentColorPicker" oninput="DashboardApp.onThemeColorChange('themeAccentColorInput', this.value)">
+                  <input type="color" id="themeAccentColorPicker"
+                    oninput="DashboardApp.onThemeColorChange('themeAccentColorInput', this.value)">
                   <div id="themeAccentColorSwatch" class="color-swatch-fill" style="background: #6366f1;"></div>
                 </div>
-                <input type="text" id="themeAccentColorInput" value="#6366F1" class="theme-hex-input" oninput="DashboardApp.onThemeHexChange('themeAccentColorSwatch', 'themeAccentColorPicker', this.value)">
+                <input type="text" id="themeAccentColorInput" value="#6366F1" class="theme-hex-input"
+                  oninput="DashboardApp.onThemeHexChange('themeAccentColorSwatch', 'themeAccentColorPicker', this.value)">
               </div>
             </div>
 
@@ -288,31 +325,42 @@
               </div>
               <div class="theme-color-controls">
                 <div class="color-swatch-picker" title="Click to choose color">
-                  <input type="color" id="themePrimaryHoverPicker" oninput="DashboardApp.onThemeColorChange('themePrimaryHoverInput', this.value)">
+                  <input type="color" id="themePrimaryHoverPicker"
+                    oninput="DashboardApp.onThemeColorChange('themePrimaryHoverInput', this.value)">
                   <div id="themePrimaryHoverSwatch" class="color-swatch-fill" style="background: #4f46e5;"></div>
                 </div>
-                <input type="text" id="themePrimaryHoverInput" value="#4F46E5" class="theme-hex-input" oninput="DashboardApp.onThemeHexChange('themePrimaryHoverSwatch', 'themePrimaryHoverPicker', this.value)">
+                <input type="text" id="themePrimaryHoverInput" value="#4F46E5" class="theme-hex-input"
+                  oninput="DashboardApp.onThemeHexChange('themePrimaryHoverSwatch', 'themePrimaryHoverPicker', this.value)">
               </div>
             </div>
 
           </div>
 
           <!-- Live Theme Preview -->
-          <div style="margin-top: 28px; padding: 22px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface); max-width: 960px;">
+          <div
+            style="margin-top: 28px; padding: 22px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface); max-width: 960px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-              <h4 style="font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin: 0;">Live Theme Preview</h4>
+              <h4
+                style="font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin: 0;">
+                Live Theme Preview</h4>
               <span style="font-size: 0.75rem; color: var(--text-tertiary);">Interactive real-time mockup</span>
             </div>
-            <div id="themeLivePreviewContainer" style="padding: 24px; border-radius: var(--radius-sm); display: flex; gap: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #06080d; border: 1px solid rgba(255,255,255,0.1);">
-              <div id="themeLivePreviewCard" style="background: #101622; padding: 16px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); flex: 1; min-width: 260px;">
-                <div id="themeLivePreviewTitle" style="font-size: 1.05rem; font-weight: 700; color: #fff;">Preview Store Product Card</div>
-                <div style="font-size: 0.813rem; color: #94a3b8; margin-top: 4px;">Instant real-time reflection of your customized palette.</div>
+            <div id="themeLivePreviewContainer"
+              style="padding: 24px; border-radius: var(--radius-sm); display: flex; gap: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #06080d; border: 1px solid rgba(255,255,255,0.1);">
+              <div id="themeLivePreviewCard"
+                style="background: #101622; padding: 16px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); flex: 1; min-width: 260px;">
+                <div id="themeLivePreviewTitle" style="font-size: 1.05rem; font-weight: 700; color: #fff;">Preview Store
+                  Product Card</div>
+                <div style="font-size: 0.813rem; color: #94a3b8; margin-top: 4px;">Instant real-time reflection of your
+                  customized palette.</div>
               </div>
               <div style="display: flex; gap: 12px; align-items: center;">
-                <button id="themeLivePreviewBtn" class="btn" style="background: #6366f1; color: #fff; font-weight: 600; padding: 9px 20px; border-radius: 8px; border: none; box-shadow: 0 0 16px -2px rgba(99,102,241,0.4);">
+                <button id="themeLivePreviewBtn" class="btn"
+                  style="background: #6366f1; color: #fff; font-weight: 600; padding: 9px 20px; border-radius: 8px; border: none; box-shadow: 0 0 16px -2px rgba(99,102,241,0.4);">
                   Sample Button
                 </button>
-                <span id="themeLivePreviewBadge" class="badge" style="background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.35); padding: 5px 12px; border-radius: 6px; font-weight: 600;">
+                <span id="themeLivePreviewBadge" class="badge"
+                  style="background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.35); padding: 5px 12px; border-radius: 6px; font-weight: 600;">
                   Accent Badge
                 </span>
               </div>
@@ -325,7 +373,7 @@
         <!-- =================================================== -->
         <div id="tab-logs" class="dashboard-tab-content">
           <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">API Request Audit Logs & Webhooks</h2>
-          
+
           <div class="data-table-wrap">
             <table class="data-table">
               <thead>
@@ -350,33 +398,43 @@
         <!-- =================================================== -->
         <div id="tab-settings" class="dashboard-tab-content">
           <div style="max-width: 650px;">
-            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">Reseller Store Branding & Contacts</h2>
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">Reseller Store Branding & Contacts
+            </h2>
             <form onsubmit="DashboardApp.saveSettings(event)">
 
               <!-- Store Logo Customization Card -->
-              <div style="margin-bottom: 24px; padding: 18px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
-                <label class="form-label" style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; display: block;">
+              <div
+                style="margin-bottom: 24px; padding: 18px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                <label class="form-label"
+                  style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; display: block;">
                   🖼️ لوجو وشعار المتجر (Store Logo)
                 </label>
                 <div style="font-size: 0.813rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5;">
-                  يتم عرض اللوجو في أعلى المتجر (Header)، القائمة الجانبية للموبايل، الفوتر، وعلامة تبويب المتصفح. يمكنك رفع ملف صورة مباشرة أو وضع رابط خارجي.
+                  يتم عرض اللوجو في أعلى المتجر (Header)، القائمة الجانبية للموبايل، الفوتر، وعلامة تبويب المتصفح. يمكنك
+                  رفع ملف صورة مباشرة أو وضع رابط خارجي.
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 14px; flex-wrap: wrap;">
                   <!-- Logo Live Preview Box -->
-                  <div id="dashLogoPreviewContainer" style="width: 72px; height: 72px; border-radius: var(--radius-sm); border: 2px dashed var(--border-medium); display: flex; align-items: center; justify-content: center; background: var(--bg-surface); overflow: hidden; flex-shrink: 0; padding: 4px;">
+                  <div id="dashLogoPreviewContainer"
+                    style="width: 72px; height: 72px; border-radius: var(--radius-sm); border: 2px dashed var(--border-medium); display: flex; align-items: center; justify-content: center; background: var(--bg-surface); overflow: hidden; flex-shrink: 0; padding: 4px;">
                     <span id="dashLogoPlaceholderIcon" style="font-size: 2rem; color: var(--text-tertiary);">✦</span>
-                    <img id="dashLogoPreviewImg" src="" alt="Logo Preview" style="display: none; width: 100%; height: 100%; object-fit: contain;">
+                    <img id="dashLogoPreviewImg" src="" alt="Logo Preview"
+                      style="display: none; width: 100%; height: 100%; object-fit: contain;">
                   </div>
 
                   <!-- Upload Buttons -->
                   <div style="flex: 1; min-width: 220px;">
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                      <label class="btn btn-secondary btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                      <label class="btn btn-secondary btn-sm"
+                        style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <span>📁</span> <span>رفع لوجو من جهازك</span>
-                        <input type="file" id="dashLogoFileInput" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" style="display: none;" onchange="DashboardApp.handleLogoUpload(this)">
+                        <input type="file" id="dashLogoFileInput"
+                          accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" style="display: none;"
+                          onchange="DashboardApp.handleLogoUpload(this)">
                       </label>
-                      <button type="button" id="btnRemoveLogo" class="btn btn-danger btn-sm" style="display: none;" onclick="DashboardApp.removeLogo()">
+                      <button type="button" id="btnRemoveLogo" class="btn btn-danger btn-sm" style="display: none;"
+                        onclick="DashboardApp.removeLogo()">
                         <span>🗑️</span> حذف اللوجو
                       </button>
                     </div>
@@ -387,8 +445,11 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
-                  <label class="form-label" style="font-size: 0.813rem;">أو أدخل رابط اللوجو مباشرة (Direct Logo URL)</label>
-                  <input type="text" id="settingLogoUrl" class="form-input" placeholder="https://example.com/logo.png أو /uploads/branding/..." oninput="DashboardApp.updateLogoPreview(this.value)">
+                  <label class="form-label" style="font-size: 0.813rem;">أو أدخل رابط اللوجو مباشرة (Direct Logo
+                    URL)</label>
+                  <input type="text" id="settingLogoUrl" class="form-input"
+                    placeholder="https://example.com/logo.png أو /uploads/branding/..."
+                    oninput="DashboardApp.updateLogoPreview(this.value)">
                 </div>
               </div>
 
@@ -403,8 +464,10 @@
               </div>
 
               <!-- Social Channels Management Box -->
-              <div style="margin: 20px 0; padding: 16px; background: var(--bg-surface-elevated, rgba(255,255,255,0.03)); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
-                <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+              <div
+                style="margin: 20px 0; padding: 16px; background: var(--bg-surface-elevated, rgba(255,255,255,0.03)); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                <h4
+                  style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
                   <span>🌐</span> <span>حسابات وقنوات التواصل والدعم (Social Channels)</span>
                 </h4>
 
@@ -414,12 +477,15 @@
                     <label style="font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
                       <span style="color: #25D366;">💬</span> <span>دعم واتساب (WhatsApp)</span>
                     </label>
-                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
-                      <input type="checkbox" id="settingWhatsappEnabled" checked onchange="DashboardApp.toggleSocialInput('settingSupportWhatsapp', this.checked)">
+                    <label
+                      style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="checkbox" id="settingWhatsappEnabled" checked
+                        onchange="DashboardApp.toggleSocialInput('settingSupportWhatsapp', this.checked)">
                       <span>إظهار في المتجر</span>
                     </label>
                   </div>
-                  <input type="text" id="settingSupportWhatsapp" class="form-input" placeholder="+201001234567 أو 01001234567">
+                  <input type="text" id="settingSupportWhatsapp" class="form-input"
+                    placeholder="+201001234567 أو 01001234567">
                 </div>
 
                 <!-- Discord -->
@@ -428,12 +494,15 @@
                     <label style="font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
                       <span style="color: #5865F2;">🎮</span> <span>سيرفر ديسكورد (Discord Server)</span>
                     </label>
-                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
-                      <input type="checkbox" id="settingDiscordEnabled" checked onchange="DashboardApp.toggleSocialInput('settingSupportDiscord', this.checked)">
+                    <label
+                      style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="checkbox" id="settingDiscordEnabled" checked
+                        onchange="DashboardApp.toggleSocialInput('settingSupportDiscord', this.checked)">
                       <span>إظهار في المتجر</span>
                     </label>
                   </div>
-                  <input type="text" id="settingSupportDiscord" class="form-input" placeholder="اسم السيرفر أو كود الدعوة (مثال: aurastore أو https://discord.gg/aurastore)">
+                  <input type="text" id="settingSupportDiscord" class="form-input"
+                    placeholder="اسم السيرفر أو كود الدعوة (مثال: Gamingstore أو https://discord.gg/Gamingstore)">
                 </div>
 
                 <!-- TikTok -->
@@ -442,16 +511,20 @@
                     <label style="font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
                       <span style="color: #ff0050;">📱</span> <span>حساب تيك توك (TikTok Account)</span>
                     </label>
-                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
-                      <input type="checkbox" id="settingTiktokEnabled" checked onchange="DashboardApp.toggleSocialInput('settingSupportTiktok', this.checked)">
+                    <label
+                      style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="checkbox" id="settingTiktokEnabled" checked
+                        onchange="DashboardApp.toggleSocialInput('settingSupportTiktok', this.checked)">
                       <span>إظهار في المتجر</span>
                     </label>
                   </div>
-                  <input type="text" id="settingSupportTiktok" class="form-input" placeholder="اسم المستخدم (مثال: @aurastore أو aurastore)">
+                  <input type="text" id="settingSupportTiktok" class="form-input"
+                    placeholder="اسم المستخدم (مثال: @Gamingstore أو Gamingstore)">
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">حفظ كافة الإعدادات (Save Settings)</button>
+              <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">حفظ كافة الإعدادات
+                (Save Settings)</button>
             </form>
           </div>
         </div>
@@ -496,7 +569,8 @@
         </div>
         <div class="form-group">
           <label class="form-label">Instructions (Arabic)</label>
-          <textarea id="pmInstructionsAr" class="form-input" rows="2" placeholder="قم بالتحويل على هذا الرقم..."></textarea>
+          <textarea id="pmInstructionsAr" class="form-input" rows="2"
+            placeholder="قم بالتحويل على هذا الرقم..."></textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-block" style="margin-top: 14px;">Save Payment Method</button>
       </form>
@@ -509,4 +583,5 @@
   <!-- Dashboard App Script -->
   <script src="/js/dashboard.js"></script>
 </body>
+
 </html>

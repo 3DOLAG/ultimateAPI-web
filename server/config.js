@@ -11,13 +11,13 @@ export const config = {
   get port() { return parseInt(process.env.PORT || '3000', 10); },
   get nodeEnv() { return process.env.NODE_ENV || 'development'; },
   store: {
-    get name() { return process.env.RESELLER_STORE_NAME || 'AURA Game & Digital Store'; },
+    get name() { return process.env.RESELLER_STORE_NAME || 'Gaming Game & Digital Store'; },
     get tagline() { return process.env.RESELLER_TAGLINE || 'Digital Cards, Subscriptions & Game Licenses'; },
     get currency() { return process.env.RESELLER_CURRENCY || 'EGP'; },
     get currencySymbol() { return process.env.RESELLER_CURRENCY_SYMBOL || 'EGP'; },
     get whatsapp() { return process.env.SUPPORT_WHATSAPP || '+201001234567'; },
-    get discord() { return process.env.SUPPORT_DISCORD || 'https://discord.gg/aurastore'; },
-    get tiktok() { return process.env.SUPPORT_TIKTOK || 'https://tiktok.com/@aurastore'; },
+    get discord() { return process.env.SUPPORT_DISCORD || 'https://discord.gg/Gamingstore'; },
+    get tiktok() { return process.env.SUPPORT_TIKTOK || 'https://tiktok.com/@Gamingstore'; },
     get logoUrl() { return process.env.RESELLER_LOGO_URL || ''; },
     // Dynamic Theme Customization
     get themePreset() { return (process.env.THEME_PRESET || 'indigo').toLowerCase().trim(); },

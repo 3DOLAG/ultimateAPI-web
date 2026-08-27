@@ -57,7 +57,7 @@ async function ensureCatalogSynced() {
     if (overrides) {
       dbHelper.applyCatalogOverrides(overrides);
     }
-  } catch {}
+  } catch { }
 
   const cats = dbHelper.getCategories('default', true);
   if (!cats || cats.length === 0) {
@@ -104,7 +104,7 @@ storeRouter.get(['/theme.css', '/theme/style.css'], async (req, res) => {
  * Helper: parse, format, and normalize social handles and links
  */
 export function formatSocialLinks(settings = {}) {
-  // TikTok: support username e.g. @aurastore or full URL
+  // TikTok: support username e.g. @Gamingstore or full URL
   const rawTiktok = (settings.support_tiktok !== undefined ? settings.support_tiktok : config.store.tiktok) || '';
   let tiktokUsername = '';
   let tiktokUrl = '';
@@ -237,7 +237,7 @@ storeRouter.get('/categories/:slug', async (req, res) => {
       ...p,
       images: (p.images || []).map(resolveSupplierImageUrl).filter(Boolean)
     }));
-    
+
     // Find subcategories that have products
     const allCategories = dbHelper.getCategories('default', true);
     const subcategories = allCategories.filter(c => c.parent_id === category.supplier_category_id || c.parent_id === category.id).map(sc => ({

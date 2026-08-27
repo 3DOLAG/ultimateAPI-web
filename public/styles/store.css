@@ -1,5 +1,5 @@
 /* =========================================================
-   AURA COMMERCE STOREFRONT STYLESHEET
+   Gaming COMMERCE STOREFRONT STYLESHEET
    Features:
    - 16:9 Landscape Game Covers & Banner Aspect Ratios
    - Full Mobile Responsiveness & Phone Optimization (2-Col Mobile Grid, Touch Targets)
@@ -98,7 +98,8 @@
   transition: all var(--transition-fast);
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
   color: #ffffff;
   background: var(--accent-subtle);
   border: 1px solid var(--border-accent);
@@ -228,7 +229,8 @@
   transition: all var(--transition-fast);
 }
 
-.mobile-menu-btn:hover, .mobile-menu-btn:active {
+.mobile-menu-btn:hover,
+.mobile-menu-btn:active {
   background: var(--bg-surface-elevated);
   border-color: var(--border-accent);
 }
@@ -325,7 +327,8 @@
   transition: all var(--transition-fast);
 }
 
-.drawer-nav-item:hover, .drawer-nav-item.active {
+.drawer-nav-item:hover,
+.drawer-nav-item.active {
   background: var(--accent-subtle);
   color: #ffffff;
   border: 1px solid var(--border-accent);
@@ -391,7 +394,8 @@
   line-height: 1;
 }
 
-.mobile-nav-item.active, .mobile-nav-item:hover {
+.mobile-nav-item.active,
+.mobile-nav-item:hover {
   color: var(--accent-light);
 }
 
@@ -456,7 +460,8 @@
   white-space: nowrap;
 }
 
-.cat-pill:hover, .cat-pill.active {
+.cat-pill:hover,
+.cat-pill.active {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
   color: #fff;
@@ -505,7 +510,8 @@
 /* Widescreen Landscape 16:9 Product Image Container */
 .product-img-wrap {
   width: 100%;
-  aspect-ratio: 16 / 9; /* Always Wide Landscape */
+  aspect-ratio: 16 / 9;
+  /* Always Wide Landscape */
   height: auto;
   background: #090c12;
   position: relative;
@@ -582,7 +588,8 @@
 
 .product-gallery-main {
   width: 100%;
-  aspect-ratio: 16 / 9; /* Widescreen Landscape Gallery */
+  aspect-ratio: 16 / 9;
+  /* Widescreen Landscape Gallery */
   height: auto;
   max-height: 440px;
   border-radius: var(--radius-md);
@@ -752,6 +759,7 @@
    10. MOBILE & PHONE RESPONSIVE OPTIMIZATION (< 768px & < 400px)
 ============================================================= */
 @media (max-width: 768px) {
+
   /* Safe padding on body to prevent bottom nav from covering content */
   body {
     padding-bottom: calc(68px + env(safe-area-inset-bottom));
@@ -928,7 +936,8 @@
     transition: all var(--transition-fast);
   }
 
-  .drawer-subcat-item:hover, .drawer-subcat-item:active {
+  .drawer-subcat-item:hover,
+  .drawer-subcat-item:active {
     color: var(--accent-light);
     background: var(--bg-surface-elevated);
   }
@@ -1049,13 +1058,13 @@
     gap: 4px;
   }
 
-  .product-card-footer > div {
+  .product-card-footer>div {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
   }
 
-  .product-card-footer > div span:first-child {
+  .product-card-footer>div span:first-child {
     font-size: 0.65rem !important;
   }
 
@@ -1143,7 +1152,8 @@
   }
 
   .form-input {
-    font-size: 16px !important; /* Prevents iOS auto-zoom */
+    font-size: 16px !important;
+    /* Prevents iOS auto-zoom */
     padding: 10px 12px;
   }
 

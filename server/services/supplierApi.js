@@ -18,7 +18,7 @@ export class SupplierApiClient {
       'X-Reseller-Secret': this.apiSecret,
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'User-Agent': 'AURA-Reseller-Platform/2.0',
+      'User-Agent': 'Gaming-Reseller-Platform/2.0',
       ...customHeaders
     };
   }
@@ -131,7 +131,7 @@ export class SupplierApiClient {
   // -------------------------------------------------------------
   async createOrder({ external_order_id, idempotency_key, customer, items, custom_fields = {}, notes = '', shipping_address = {} }) {
     const rawCustomData = custom_fields || customer?.custom_fields || customer?.customer_data || {};
-    
+
     // Normalize custom fields
     let customData = {};
     if (typeof rawCustomData === 'object' && rawCustomData !== null) {
@@ -148,7 +148,7 @@ export class SupplierApiClient {
     const customFieldLines = Object.entries(customData)
       .map(([k, v]) => `• ${k.replace(/^custom_field_/, '').replace(/_/g, ' ')}: ${v}`)
       .join('\n');
-    
+
     const combinedNotes = [
       notes || customer?.notes || '',
       customFieldLines ? `[بيانات التفعيل والتسليم / Fulfillment Fields]:\n${customFieldLines}` : ''

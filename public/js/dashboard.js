@@ -1,5 +1,5 @@
 /**
- * AURA RESELLER PRIVATE DASHBOARD CONTROLLER
+ * Gaming RESELLER PRIVATE DASHBOARD CONTROLLER
  */
 
 const DashboardApp = {
@@ -221,15 +221,15 @@ const DashboardApp = {
         <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px;">ORDERED ITEMS:</div>
         <div style="background: var(--bg-surface-elevated); padding: 10px; border-radius: var(--radius-xs);">
           ${(ord.items || []).map(it => {
-            const mainName = it.item_name || it.name || 'Product';
-            const varLabel = it.variant_label && it.variant_label !== mainName && it.variant_label !== 'Standard License' && it.variant_label !== 'Standard Edition' ? ` (${it.variant_label})` : '';
-            return `
+      const mainName = it.item_name || it.name || 'Product';
+      const varLabel = it.variant_label && it.variant_label !== mainName && it.variant_label !== 'Standard License' && it.variant_label !== 'Standard Edition' ? ` (${it.variant_label})` : '';
+      return `
             <div style="display: flex; justify-content: space-between; font-size: 0.84rem; padding: 4px 0;">
               <span>${mainName}${varLabel} × ${it.quantity || 1}</span>
               <strong>${Number(it.total_price || it.unit_customer_price || it.price || 0).toLocaleString()} ${ord.currency}</strong>
             </div>
             `;
-          }).join('')}
+    }).join('')}
         </div>
       </div>
 
@@ -656,15 +656,15 @@ const DashboardApp = {
 
     // 1. Filter Products
     const filteredProducts = (this.state.catalogProducts || []).filter(p => {
-      const matchSearch = !search || 
-        (p.name && p.name.toLowerCase().includes(search)) || 
-        (p.name_ar && p.name_ar.toLowerCase().includes(search)) || 
+      const matchSearch = !search ||
+        (p.name && p.name.toLowerCase().includes(search)) ||
+        (p.name_ar && p.name_ar.toLowerCase().includes(search)) ||
         (p.category_id && p.category_id.toLowerCase().includes(search)) ||
         (p.slug && p.slug.toLowerCase().includes(search));
 
       const isHidden = Boolean(p.is_hidden);
-      const matchVisibility = filter === 'all' || 
-        (filter === 'visible' && !isHidden) || 
+      const matchVisibility = filter === 'all' ||
+        (filter === 'visible' && !isHidden) ||
         (filter === 'hidden' && isHidden);
 
       return matchSearch && matchVisibility;
@@ -673,14 +673,14 @@ const DashboardApp = {
 
     // 2. Filter Categories
     const filteredCategories = (this.state.catalogCategories || []).filter(c => {
-      const matchSearch = !search || 
-        (c.name && c.name.toLowerCase().includes(search)) || 
-        (c.name_ar && c.name_ar.toLowerCase().includes(search)) || 
+      const matchSearch = !search ||
+        (c.name && c.name.toLowerCase().includes(search)) ||
+        (c.name_ar && c.name_ar.toLowerCase().includes(search)) ||
         (c.slug && c.slug.toLowerCase().includes(search));
 
       const isHidden = Boolean(c.is_hidden);
-      const matchVisibility = filter === 'all' || 
-        (filter === 'visible' && !isHidden) || 
+      const matchVisibility = filter === 'all' ||
+        (filter === 'visible' && !isHidden) ||
         (filter === 'hidden' && isHidden);
 
       return matchSearch && matchVisibility;
@@ -706,11 +706,11 @@ const DashboardApp = {
         <tr style="${isHidden ? 'opacity: 0.65; background: rgba(239, 68, 68, 0.04);' : ''}">
           <td>
             <div style="display: flex; align-items: center; gap: 10px;">
-              ${imgUrl 
-                ? `<img src="${imgUrl}" alt="${p.name}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-subtle);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              ${imgUrl
+          ? `<img src="${imgUrl}" alt="${p.name}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-subtle);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                    <div style="width: 36px; height: 36px; background: var(--bg-surface-elevated); border-radius: 6px; display: none; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-light);">${fallbackInitial}</div>`
-                : `<div style="width: 36px; height: 36px; background: var(--bg-surface-elevated); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-light);">${fallbackInitial}</div>`
-              }
+          : `<div style="width: 36px; height: 36px; background: var(--bg-surface-elevated); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-light);">${fallbackInitial}</div>`
+        }
               <div>
                 <strong style="display: block; font-size: 0.9rem;">${p.name_ar || p.name}</strong>
                 <span style="font-size: 0.75rem; color: var(--text-tertiary);">${p.name !== (p.name_ar || p.name) ? p.name : p.slug}</span>
@@ -722,10 +722,10 @@ const DashboardApp = {
           <td style="color: var(--text-tertiary);">${p.price_base || 0} ${p.currency}</td>
           <td><strong style="color: var(--accent-light);">${p.price} ${p.currency}</strong></td>
           <td>
-            ${isHidden 
-              ? `<span class="badge badge-danger" style="display: inline-flex; align-items: center; gap: 4px;">🚫 مخفي من المتجر</span>`
-              : `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 4px;">👁️ معروض بالمتجر</span>`
-            }
+            ${isHidden
+          ? `<span class="badge badge-danger" style="display: inline-flex; align-items: center; gap: 4px;">🚫 مخفي من المتجر</span>`
+          : `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 4px;">👁️ معروض بالمتجر</span>`
+        }
           </td>
           <td style="text-align: center;">
             <button class="btn btn-sm ${isHidden ? 'btn-success' : 'btn-danger'}" onclick="DashboardApp.toggleProductVisibility('${p.id || p.supplier_product_id}')" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; font-size: 0.78rem;">
@@ -760,10 +760,10 @@ const DashboardApp = {
           <td><strong style="color: var(--accent-light);">${c.product_count || 0}</strong> منتج</td>
           <td>${c.margin_percent ?? 15}%</td>
           <td>
-            ${isHidden 
-              ? `<span class="badge badge-danger" style="display: inline-flex; align-items: center; gap: 4px;">🚫 مخفي بالكامل</span>`
-              : `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 4px;">👁️ معروض بالمتجر</span>`
-            }
+            ${isHidden
+          ? `<span class="badge badge-danger" style="display: inline-flex; align-items: center; gap: 4px;">🚫 مخفي بالكامل</span>`
+          : `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 4px;">👁️ معروض بالمتجر</span>`
+        }
           </td>
           <td style="text-align: center;">
             <button class="btn btn-sm ${isHidden ? 'btn-success' : 'btn-danger'}" onclick="DashboardApp.toggleCategoryVisibility('${catId}')" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; font-size: 0.78rem;">
@@ -870,7 +870,7 @@ const DashboardApp = {
     if (!hex) return;
     let formattedHex = hex.trim();
     if (!formattedHex.startsWith('#')) formattedHex = '#' + formattedHex;
-    
+
     const input = document.getElementById(`${prefix}Input`);
     const picker = document.getElementById(`${prefix}Picker`);
     const swatch = document.getElementById(`${prefix}Swatch`);
@@ -887,7 +887,7 @@ const DashboardApp = {
   onThemeColorChange(inputId, hexValue) {
     const input = document.getElementById(inputId);
     if (input) input.value = hexValue.toUpperCase();
-    
+
     const swatchId = inputId.replace('Input', 'Swatch');
     const swatch = document.getElementById(swatchId);
     if (swatch) swatch.style.background = hexValue;
@@ -995,7 +995,7 @@ const DashboardApp = {
           </tr>
         `).join('');
       }
-    } catch {}
+    } catch { }
   },
 
   async loadStoreBranding() {
@@ -1005,7 +1005,7 @@ const DashboardApp = {
       if (json.success && json.data) {
         this.applySidebarBranding(json.data);
       }
-    } catch {}
+    } catch { }
   },
 
   applySidebarBranding(data) {
@@ -1074,7 +1074,7 @@ const DashboardApp = {
       if (json.success && json.data && json.data.logo_url) {
         const logoUrlInput = document.getElementById('settingLogoUrl');
         if (logoUrlInput) logoUrlInput.value = json.data.logo_url;
-        
+
         this.updateLogoPreview(json.data.logo_url);
         this.applySidebarBranding({ logo_url: json.data.logo_url });
         this.showToast('تم رفع وتعيين لوجو المتجر بنجاح 🚀', 'success');
@@ -1093,7 +1093,7 @@ const DashboardApp = {
     const fileInput = document.getElementById('dashLogoFileInput');
     if (logoUrlInput) logoUrlInput.value = '';
     if (fileInput) fileInput.value = '';
-    
+
     this.updateLogoPreview('');
     this.applySidebarBranding({ logo_url: '' });
 
@@ -1125,11 +1125,11 @@ const DashboardApp = {
         if (document.getElementById('settingStoreName')) document.getElementById('settingStoreName').value = json.data.store_name || '';
         if (document.getElementById('settingTagline')) document.getElementById('settingTagline').value = json.data.tagline || '';
         if (document.getElementById('settingLogoUrl')) document.getElementById('settingLogoUrl').value = json.data.logo_url || '';
-        
+
         if (document.getElementById('settingSupportWhatsapp')) document.getElementById('settingSupportWhatsapp').value = json.data.support_whatsapp || '';
         if (document.getElementById('settingSupportDiscord')) document.getElementById('settingSupportDiscord').value = json.data.support_discord || '';
         if (document.getElementById('settingSupportTiktok')) document.getElementById('settingSupportTiktok').value = json.data.support_tiktok || '';
-        
+
         const waActive = json.data.whatsapp_enabled !== false && json.data.whatsapp_enabled !== 'false';
         const discordActive = json.data.discord_enabled !== false && json.data.discord_enabled !== 'false';
         const tiktokActive = json.data.tiktok_enabled !== false && json.data.tiktok_enabled !== 'false';
@@ -1200,7 +1200,7 @@ const DashboardApp = {
   async logout() {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {}
+    } catch { }
     window.location.href = '/admin/login';
   },
 

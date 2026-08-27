@@ -1,5 +1,5 @@
 /**
- * AURA COMMERCE STOREFRONT CLIENT CONTROLLER & SPA ROUTER
+ * Gaming COMMERCE STOREFRONT CLIENT CONTROLLER & SPA ROUTER
  */
 
 const StoreApp = {
@@ -137,7 +137,7 @@ const StoreApp = {
   // -------------------------------------------------------------
   updateDocumentTitle(pageTitle = '') {
     const info = this.state.storeInfo;
-    const storeName = info?.name || 'AURA Store';
+    const storeName = info?.name || 'Gaming Store';
     const tagline = info?.tagline ? ` — ${info.tagline}` : '';
     if (!pageTitle) {
       document.title = `${storeName}${tagline}`;
@@ -206,7 +206,7 @@ const StoreApp = {
           document.querySelectorAll('.brand-mark').forEach(el => el.style.display = 'flex');
           document.querySelectorAll('.brand-logo-img').forEach(el => el.style.display = 'none');
         }
-        
+
         // Support Channels (WhatsApp, Discord, TikTok) - Dynamic Handles & Visibility
         // 1. WhatsApp
         const waContainer = document.getElementById('footerSupportWhatsapp');
@@ -218,7 +218,7 @@ const StoreApp = {
             waContainer.href = json.data.whatsapp_url || `https://wa.me/${json.data.support_whatsapp.replace(/[^0-9]/g, '')}`;
           }
           if (waText) waText.textContent = json.data.support_whatsapp;
-          
+
           ['drawerSupportWhatsapp', 'bottomNavWhatsapp', 'topSupportWhatsappLink', 'btnSuccessWhatsApp'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -299,10 +299,10 @@ const StoreApp = {
       nav.innerHTML = `
         <a href="/" onclick="event.preventDefault(); StoreApp.navigate('/');" class="nav-link ${this.state.activeRoute === '/' ? 'active' : ''}">الرئيسية</a>
         ${activeTree.map(cat => {
-          const validChildren = (cat.children || []).filter(c => c.product_count === undefined || c.product_count > 0);
-          const hasChildren = validChildren.length > 0;
-          if (hasChildren) {
-            return `
+        const validChildren = (cat.children || []).filter(c => c.product_count === undefined || c.product_count > 0);
+        const hasChildren = validChildren.length > 0;
+        if (hasChildren) {
+          return `
               <div class="nav-dropdown">
                 <a href="/category/${cat.slug}" onclick="event.preventDefault(); StoreApp.navigate('/category/${cat.slug}');" class="nav-link">
                   ${cat.name_ar || cat.name} ▾
@@ -319,13 +319,13 @@ const StoreApp = {
                 </div>
               </div>
             `;
-          }
-          return `
+        }
+        return `
             <a href="/category/${cat.slug}" onclick="event.preventDefault(); StoreApp.navigate('/category/${cat.slug}');" class="nav-link">
               ${cat.name_ar || cat.name}
             </a>
           `;
-        }).join('')}
+      }).join('')}
       `;
     }
 
@@ -337,9 +337,9 @@ const StoreApp = {
         <div class="drawer-divider"></div>
         <div class="drawer-heading">الأقسام والتصنيفات</div>
         ${activeTree.map(cat => {
-          const validChildren = (cat.children || []).filter(c => c.product_count === undefined || c.product_count > 0);
-          const hasChildren = validChildren.length > 0;
-          return `
+        const validChildren = (cat.children || []).filter(c => c.product_count === undefined || c.product_count > 0);
+        const hasChildren = validChildren.length > 0;
+        return `
             <div class="drawer-category-group">
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <a href="/category/${cat.slug}" onclick="event.preventDefault(); StoreApp.navigate('/category/${cat.slug}');" class="drawer-nav-item" style="flex: 1;">
@@ -365,7 +365,7 @@ const StoreApp = {
               ` : ''}
             </div>
           `;
-        }).join('')}
+      }).join('')}
       `;
     }
   },
@@ -492,7 +492,7 @@ const StoreApp = {
       this.renderProductsGrid(this.state.products, 'homeProductsGrid');
       return;
     }
-    const filtered = this.state.products.filter(p => 
+    const filtered = this.state.products.filter(p =>
       (p.name && p.name.toLowerCase().includes(query)) ||
       (p.name_ar && p.name_ar.toLowerCase().includes(query)) ||
       (p.description && p.description.toLowerCase().includes(query))
@@ -543,7 +543,7 @@ const StoreApp = {
   // -------------------------------------------------------------
   async renderProductView(slug) {
     document.getElementById('view-product').style.display = 'block';
-    
+
     try {
       const res = await fetch(`/api/products/${slug}`);
       const json = await res.json();
@@ -608,10 +608,10 @@ const StoreApp = {
     if (!it) return;
 
     this.state.selectedVariant = it;
-    
+
     // Remove selected class from all cards
     document.querySelectorAll('.variant-card').forEach(el => el.classList.remove('selected'));
-    
+
     // Highlight ONLY the specifically clicked card by ID or data-item-id
     const targetCard = document.getElementById(`variant-card-${it.id}`) || document.querySelector(`.variant-card[data-item-id="${it.id}"]`);
     if (targetCard) {
@@ -1158,7 +1158,7 @@ const StoreApp = {
   async renderPaymentView(orderId) {
     document.getElementById('view-payment').style.display = 'block';
     this.updateDocumentTitle(`إتمام الدفع - طلب #${orderId}`);
-    
+
     try {
       const [orderRes, pmRes] = await Promise.all([
         fetch(`/api/orders/${orderId}`),
@@ -1172,7 +1172,7 @@ const StoreApp = {
         const ord = orderJson.data;
         document.getElementById('payOrderIdText').textContent = ord.reseller_order_id;
         document.getElementById('payOrderTotalText').textContent = `${ord.total?.toLocaleString()} ${ord.currency}`;
-        
+
         const badge = document.getElementById('payOrderStatusBadge');
         if (ord.payment_status === 'payment_submitted') {
           badge.className = 'badge badge-primary';
@@ -1185,7 +1185,7 @@ const StoreApp = {
         // Render payment methods
         const methods = pmJson.data || [];
         const container = document.getElementById('paymentMethodsList');
-        
+
         if (methods.length > 0) {
           this.state.selectedPaymentMethod = methods[0];
           container.innerHTML = methods.map((m, idx) => `
@@ -1416,7 +1416,7 @@ const StoreApp = {
           link.onclick = () => this.handleLogout();
         }
       }
-    } catch {}
+    } catch { }
   },
 
   async handleLogout() {

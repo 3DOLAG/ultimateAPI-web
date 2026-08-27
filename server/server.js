@@ -86,7 +86,7 @@ app.get(['/admin/login', '/admin/login/'], (req, res) => {
 app.get(['/admin/logout', '/admin/logout/'], (req, res) => {
   const token = req.cookies?.auth_token || req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (token) {
-    try { dbHelper.deleteSession(token); } catch {}
+    try { dbHelper.deleteSession(token); } catch { }
   }
   res.clearCookie('auth_token');
   return res.redirect('/admin/login');
@@ -132,7 +132,7 @@ async function sendDynamicStoreHtml(req, res) {
 
   try {
     const settings = await getMergedSettings();
-    const storeName = settings.store_name || config.store.name || 'AURA Game & Digital Store';
+    const storeName = settings.store_name || config.store.name || 'Gaming Game & Digital Store';
     const tagline = settings.tagline || config.store.tagline || 'متجر معتمد للبطاقات الرقمية واشتراكات الألعاب والحسابات الرسمية مع استلام فوري ودفع آمن.';
     const logoUrl = settings.logo_url || config.store.logoUrl || '';
 
@@ -181,7 +181,7 @@ async function sendDynamicStoreHtml(req, res) {
 
     // Inject dynamic Open Graph tags into <head>
     html = html.replace('<head>', `<head>\n  ${ogTags}`);
-    
+
     // Inject dynamic brand text into placeholders
     html = html.replace(/<span class="store-name-text">.*?<\/span>/g, `<span class="store-name-text">${escapeHtml(storeName)}</span>`);
     if (tagline) {
@@ -211,13 +211,13 @@ if (isDirectRun && !process.env.VERCEL) {
     console.log(`🛍️ Storefront: http://localhost:${config.port}`);
     console.log(`🔒 Admin Login: http://localhost:${config.port}/admin/login`);
     console.log(`👑 Private Dashboard: http://localhost:${config.port}/admin`);
-    
+
     if (config.discordAuth.isConfigured()) {
       console.log(`🛡️ Discord Admin Auth: ENABLED (Target Discord ID: ${config.discordAuth.adminDiscordId})`);
     } else {
       console.log(`⚠️ Discord Admin Auth: INCOMPLETE (Set DISCORD_* and ADMIN_DISCORD_ID in .env)`);
     }
-    
+
     console.log(`🔗 Supplier API Gateway: ${config.supplier.apiUrl}`);
     console.log('======================================================\n');
 

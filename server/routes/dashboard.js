@@ -158,7 +158,7 @@ dashboardRouter.post('/orders/:id/retry-discord-webhook', requirePermission('app
             { name: '💰 Total Amount', value: `**${Number(order.total || 0).toLocaleString()} ${order.currency || 'EGP'}**`, inline: true },
             { name: '📦 Items', value: (order.items || []).map(it => `• ${it.quantity || 1}× ${it.item_name || it.name} (${(it.total_price || it.price || 0).toLocaleString()} ${order.currency || 'EGP'})`).join('\n') || 'N/A', inline: false }
           ],
-          footer: { text: `AURA Store Webhook Engine • Event: ${eventId}` },
+          footer: { text: `Gaming Store Webhook Engine • Event: ${eventId}` },
           timestamp: new Date().toISOString()
         }
       ]
@@ -234,7 +234,7 @@ dashboardRouter.get('/catalog', async (req, res) => {
       if (overrides) {
         dbHelper.applyCatalogOverrides(overrides);
       }
-    } catch {}
+    } catch { }
 
     const products = dbHelper.getProducts({ limit: 500, includeHidden: true });
     const categories = dbHelper.getCategories('default', false, true);
@@ -326,7 +326,7 @@ dashboardRouter.get('/payment-methods', async (req, res) => {
           dbHelper.upsertPaymentMethod(m);
         }
       }
-    } catch {}
+    } catch { }
 
     const methods = dbHelper.getPaymentMethods(false);
     res.json({ success: true, data: methods });
@@ -346,7 +346,7 @@ dashboardRouter.post('/payment-methods', requirePermission('manage_payment_metho
     const allMethods = dbHelper.getPaymentMethods(false);
     try {
       await blobService.savePaymentMethods(allMethods);
-    } catch {}
+    } catch { }
 
     res.json({ success: true, message: 'Payment method saved successfully.' });
   } catch (err) {
@@ -360,7 +360,7 @@ dashboardRouter.delete('/payment-methods/:id', requirePermission('manage_payment
     const allMethods = dbHelper.getPaymentMethods(false);
     try {
       await blobService.savePaymentMethods(allMethods);
-    } catch {}
+    } catch { }
 
     res.json({ success: true, message: 'Payment method deleted.' });
   } catch (err) {

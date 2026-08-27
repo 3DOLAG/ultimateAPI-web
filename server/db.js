@@ -280,24 +280,24 @@ export function initDatabase() {
   `);
 
   // Safe schema migrations
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_proof_path TEXT;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_reference TEXT;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'pending';`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN rejection_reason TEXT;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_proof_submitted INTEGER NOT NULL DEFAULT 0;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_proof_sent_to_discord INTEGER NOT NULL DEFAULT 0;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_proof_sent_at TEXT;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN discord_event_id TEXT;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN customer_data_json TEXT NOT NULL DEFAULT '{}';`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN customer_notes TEXT;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_products ADD COLUMN custom_fields_json TEXT NOT NULL DEFAULT '[]';`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_products ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_categories ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`); } catch {}
-  try { db.exec(`CREATE INDEX IF NOT EXISTS idx_reseller_prod_hidden ON reseller_products(is_hidden);`); } catch {}
-  try { db.exec(`CREATE INDEX IF NOT EXISTS idx_reseller_cat_hidden ON reseller_categories(is_hidden);`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_users ADD COLUMN discord_id TEXT;`); } catch {}
-  try { db.exec(`ALTER TABLE reseller_users ADD COLUMN avatar_url TEXT;`); } catch {}
-  try { db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_reseller_users_discord ON reseller_users(discord_id) WHERE discord_id IS NOT NULL;`); } catch {}
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_proof_path TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_reference TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'pending';`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN rejection_reason TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_proof_submitted INTEGER NOT NULL DEFAULT 0;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_proof_sent_to_discord INTEGER NOT NULL DEFAULT 0;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN payment_proof_sent_at TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN discord_event_id TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN customer_data_json TEXT NOT NULL DEFAULT '{}';`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN customer_notes TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_products ADD COLUMN custom_fields_json TEXT NOT NULL DEFAULT '[]';`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_products ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_categories ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`); } catch { }
+  try { db.exec(`CREATE INDEX IF NOT EXISTS idx_reseller_prod_hidden ON reseller_products(is_hidden);`); } catch { }
+  try { db.exec(`CREATE INDEX IF NOT EXISTS idx_reseller_cat_hidden ON reseller_categories(is_hidden);`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_users ADD COLUMN discord_id TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_users ADD COLUMN avatar_url TEXT;`); } catch { }
+  try { db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_reseller_users_discord ON reseller_users(discord_id) WHERE discord_id IS NOT NULL;`); } catch { }
 
   // Initialize Default Store Settings
   const insertSetting = db.prepare(`INSERT OR REPLACE INTO store_settings (key, value) VALUES (?, ?)`);
@@ -326,8 +326,8 @@ export function initDatabase() {
       'InstaPay (Egypt)',
       'إنستاباي (InstaPay)',
       'INSTAPAY',
-      'aurastore@instapay',
-      'AURA Digital Commerce',
+      'Gamingstore@instapay',
+      'Gaming Digital Commerce',
       'Transfer the exact amount to our InstaPay IPA address. Take a screenshot of the receipt and upload it below.',
       'قم بتحويل المبلغ المطلوب بدقة إلى عنوان إنستاباي الموضح، ثم التقط صورة أو سكرين شوت لإيصال التحويل وارفقها بالأسفل.',
       '⚡',
@@ -340,7 +340,7 @@ export function initDatabase() {
       'فودافون كاش ومحافظ المحمول',
       'WALLET',
       '01012345678',
-      'AURA Store Wallet',
+      'Gaming Store Wallet',
       'Send the exact order amount to our Vodafone Cash number. Save the transfer confirmation SMS or screenshot and upload it.',
       'قم بتحويل قيمة الطلب إلى رقم فودافون كاش الموضح، ثم ارفع صورة رسالة تأكيد التحويل لتأكيد طلبك فورا.',
       '📱',
@@ -353,7 +353,7 @@ export function initDatabase() {
       'تحويل بنكي مباشر',
       'BANK',
       'EG12000000123456789012345',
-      'AURA Digital Commerce LLC',
+      'Gaming Digital Commerce LLC',
       'Direct IBAN transfer. Please upload deposit slip or banking app transfer receipt.',
       'تحويل بنكي مباشر عبر الآيبان (IBAN). يرجى إرفاق إشعار التحويل البنكي.',
       '🏛️',
@@ -364,12 +364,12 @@ export function initDatabase() {
   // Purge legacy password-based admin accounts to enforce Discord OAuth2 exclusivity
   try {
     db.prepare(`DELETE FROM reseller_users WHERE id = 'usr_owner_001'`).run();
-  } catch {}
+  } catch { }
 
   // Zero-Disk and Zero-DB Order Policy: Purge any stored order rows from previous runs
   try {
     db.exec(`DELETE FROM reseller_order_items; DELETE FROM reseller_orders;`);
-  } catch {}
+  } catch { }
 }
 
 // Automatically initialize tables on import
@@ -874,7 +874,7 @@ export const dbHelper = {
       WHERE product_id = ? AND status = 'active'
       ORDER BY (base_price > 0) DESC, base_price ASC, id ASC
     `);
-    
+
     const items = itemsStmt.all(row.id).map(it => {
       const customerPrice = Math.round((it.base_price * multiplier) * 100) / 100;
       const isPriced = it.base_price > 0 && customerPrice > 0;
@@ -1257,8 +1257,8 @@ export const dbHelper = {
 
     const id = `usr_discord_${discordId}`;
     // Clean up any conflicting record with this id or email
-    try { db.prepare(`DELETE FROM reseller_users WHERE id = ? OR email = ?`).run(id, email); } catch {}
-    
+    try { db.prepare(`DELETE FROM reseller_users WHERE id = ? OR email = ?`).run(id, email); } catch { }
+
     db.prepare(`
       INSERT INTO reseller_users (id, reseller_id, name, email, password_hash, discord_id, avatar_url, role, permissions_json, status, last_login_at)
       VALUES (?, 'default', ?, ?, '', ?, ?, 'OWNER', ?, 'active', datetime('now'))
