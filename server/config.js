@@ -54,5 +54,8 @@ export const config = {
   },
   discordWebhookUrl: process.env.DISCORD_ORDER_WEBHOOK_URL || '',
   databasePath: path.resolve(process.cwd(), process.env.DATABASE_PATH || './data/reseller_store.db'),
-  uploadDir: path.resolve(process.cwd(), process.env.UPLOAD_DIR || './uploads/proofs')
+  uploadDir: path.resolve(process.cwd(), process.env.UPLOAD_DIR || './uploads/proofs'),
+  blob: {
+    token: process.env.BLOB_READ_WRITE_TOKEN || ''
+  }
 };

@@ -8,26 +8,11 @@ import { dbHelper } from '../db.js';
 import { orderService } from '../services/orderService.js';
 import { syncEngine } from '../services/syncEngine.js';
 import { supplierApi } from '../services/supplierApi.js';
+import { blobService } from '../services/blobService.js';
 import { config } from '../config.js';
 
-const brandingUploadDir = path.resolve(process.cwd(), 'uploads/branding');
-if (!fs.existsSync(brandingUploadDir)) {
-  fs.mkdirSync(brandingUploadDir, { recursive: true });
-}
-
-const logoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, brandingUploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.png';
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `store-logo-${uniqueSuffix}${ext}`);
-  }
-});
-
 const uploadLogoMulter = multer({
-  storage: logoStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|webp|svg\+xml|svg|gif/i;
@@ -400,22 +385,32 @@ dashboardRouter.post('/settings', requirePermission('manage_settings'), (req, re
  * Uploads store logo image and automatically updates store_settings
  */
 dashboardRouter.post('/upload-logo', requirePermission('manage_settings'), (req, res) => {
-  uploadLogoMulter.single('logo')(req, res, (err) => {
+  uploadLogoMulter.single('logo')(req, res, async (err) => {
     if (err) {
       return res.status(400).json({ success: false, error: err.message });
     }
-    if (!req.file) {
+    if (!req.file || !req.file.buffer) {
       return res.status(400).json({ success: false, error: 'No logo image file was uploaded.' });
     }
 
-    const logoUrl = `/uploads/branding/${req.file.filename}`;
-    dbHelper.saveStoreSettings({ logo_url: logoUrl });
+    try {
+      const result = await blobService.upload(req.file.originalname, req.file.buffer, {
+        folder: 'branding',
+        contentType: req.file.mimetype,
+        access: 'public'
+      });
 
-    res.json({
-      success: true,
-      message: 'Store logo uploaded successfully.',
-      data: { logo_url: logoUrl }
-    });
+      dbHelper.saveStoreSettings({ logo_url: result.url });
+
+      res.json({
+        success: true,
+        message: 'Store logo uploaded successfully.',
+        data: { logo_url: result.url, provider: result.provider }
+      });
+    } catch (uploadErr) {
+      console.error('[Dashboard] Error uploading store logo:', uploadErr);
+      res.status(500).json({ success: false, error: uploadErr.message });
+    }
   });
 });
 
