@@ -174,7 +174,7 @@ export class DiscordWebhookService {
             url: `attachment://${fileName}`
           },
           footer: {
-            text: `AURA Store Webhook Engine • Event ID: ${eventId}`
+            text: `${config.store.name} Webhook Engine • Event ID: ${eventId}`
           },
           timestamp: nowIso
         }
