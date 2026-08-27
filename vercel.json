@@ -28,6 +28,10 @@
     {
       "source": "/dashboard/(.*)",
       "destination": "/api/index.js"
+    },
+    {
+      "source": "/((?!.*\\.[\\w]+$).*)",
+      "destination": "/api/index.js"
     }
   ]
 }

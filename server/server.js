@@ -39,12 +39,12 @@ app.use(express.static(publicDir));
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 
 // Mount REST API Routers
-app.use('/api', storeRouter);
-app.use('/api/payment-methods', paymentMethodsRouter);
-app.use(['/api/orders', '/api/v1/orders'], ordersRouter);
-app.use('/api/auth', authRouter);
-app.use(['/api/dashboard', '/api/admin'], dashboardRouter);
-app.use(['/api/v1/webhooks', '/api/webhooks'], webhooksRouter);
+app.use(['/api', '/api/v1'], storeRouter);
+app.use(['/api/payment-methods', '/api/v1/payment-methods', '/payment-methods'], paymentMethodsRouter);
+app.use(['/api/orders', '/api/v1/orders', '/orders'], ordersRouter);
+app.use(['/api/auth', '/api/v1/auth', '/auth'], authRouter);
+app.use(['/api/dashboard', '/api/admin', '/api/v1/dashboard', '/api/v1/admin'], dashboardRouter);
+app.use(['/api/v1/webhooks', '/api/webhooks', '/webhooks'], webhooksRouter);
 
 // Aliases for compatibility
 app.get('/api/v1/products', (req, res) => {
