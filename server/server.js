@@ -9,7 +9,7 @@ import { dbHelper } from './db.js';
 import { syncEngine } from './services/syncEngine.js';
 
 // Routers
-import { storeRouter } from './routes/store.js';
+import { storeRouter, getMergedSettings } from './routes/store.js';
 import { ordersRouter } from './routes/orders.js';
 import { paymentMethodsRouter } from './routes/paymentMethods.js';
 import { authRouter } from './routes/auth.js';
@@ -35,8 +35,8 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve Public Static Files (CSS, JS, Assets)
-app.use(express.static(publicDir));
+// Serve Public Static Files (CSS, JS, Assets) - without auto-serving static index.html
+app.use(express.static(publicDir, { index: false }));
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 
 // Mount REST API Routers
@@ -108,9 +108,92 @@ app.get(['/admin', '/admin/*', '/dashboard', '/dashboard/*'], (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
-// Clean Public Storefront SPA Routes
+// Helper to escape HTML characters for safe meta tag rendering
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Server-Side Open Graph & Meta Tag Injector for Discord / WhatsApp / Social previews
+ */
+async function sendDynamicStoreHtml(req, res) {
+  const htmlPath = path.join(publicDir, 'index.html');
+  if (!fs.existsSync(htmlPath)) {
+    return res.status(404).send('Not Found');
+  }
+
+  let html = fs.readFileSync(htmlPath, 'utf8');
+
+  try {
+    const settings = await getMergedSettings();
+    const storeName = settings.store_name || config.store.name || 'AURA Game & Digital Store';
+    const tagline = settings.tagline || config.store.tagline || 'متجر معتمد للبطاقات الرقمية واشتراكات الألعاب والحسابات الرسمية مع استلام فوري ودفع آمن.';
+    const logoUrl = settings.logo_url || config.store.logoUrl || '';
+
+    // Check if visiting a specific product e.g. /product/fortnite
+    const url = req.originalUrl || req.url || '';
+    let pageTitle = `${storeName} — ${tagline}`;
+    let pageDesc = tagline;
+    let pageImage = logoUrl || 'https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=1200&q=80';
+
+    const prodMatch = url.match(/\/product\/([^\/?#]+)/);
+    if (prodMatch) {
+      const slug = decodeURIComponent(prodMatch[1]);
+      const product = dbHelper.getProductByIdOrSlug(slug);
+      if (product) {
+        pageTitle = `${product.name_ar || product.name} | ${storeName}`;
+        pageDesc = product.description_ar || product.description || tagline;
+        if (Array.isArray(product.images) && product.images.length > 0) {
+          pageImage = product.images[0];
+        }
+      }
+    }
+
+    const ogTags = `
+  <title>${escapeHtml(pageTitle)}</title>
+  <meta name="description" content="${escapeHtml(pageDesc)}">
+  <!-- Open Graph / Discord / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="${escapeHtml(storeName)}">
+  <meta property="og:title" content="${escapeHtml(pageTitle)}">
+  <meta property="og:description" content="${escapeHtml(pageDesc)}">
+  <meta property="og:image" content="${escapeHtml(pageImage)}">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(pageTitle)}">
+  <meta name="twitter:description" content="${escapeHtml(pageDesc)}">
+  <meta name="twitter:image" content="${escapeHtml(pageImage)}">
+    `.trim();
+
+    // Strip static title and description tags
+    html = html.replace(/<title>.*?<\/title>/is, '');
+    html = html.replace(/<meta\s+name=["']description["'][^>]*>/is, '');
+    html = html.replace(/<meta\s+property=["']og:[^"']+["'][^>]*>/gis, '');
+    html = html.replace(/<meta\s+name=["']twitter:[^"']+["'][^>]*>/gis, '');
+
+    // Inject dynamic Open Graph tags into <head>
+    html = html.replace('<head>', `<head>\n  ${ogTags}`);
+    
+    // Inject dynamic brand text into placeholders
+    html = html.replace(/<span class="store-name-text">.*?<\/span>/g, `<span class="store-name-text">${escapeHtml(storeName)}</span>`);
+  } catch (err) {
+    console.warn('[HTML Render] Dynamic meta injection warning:', err.message);
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  return res.send(html);
+}
+
+// Clean Public Storefront SPA Routes with Real-Time Meta Tags
 app.get('*', (req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
+  return sendDynamicStoreHtml(req, res);
 });
 
 // Start Server when run directly / locally (not inside Vercel Serverless Function)

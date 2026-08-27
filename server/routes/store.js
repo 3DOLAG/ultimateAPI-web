@@ -11,7 +11,7 @@ export const storeRouter = express.Router();
 /**
  * Helper: merge settings from blob (persistent) → db (ephemeral) → env defaults
  */
-async function getMergedSettings() {
+export async function getMergedSettings() {
   const dbSettings = dbHelper.getStoreSettings();
   let blobSettings = null;
   try {
