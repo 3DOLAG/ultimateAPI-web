@@ -130,13 +130,37 @@ export class SupplierApiClient {
   // Order Fulfillment Endpoints
   // -------------------------------------------------------------
   async createOrder({ external_order_id, idempotency_key, customer, items, custom_fields = {}, notes = '', shipping_address = {} }) {
-    const customData = custom_fields || customer?.custom_fields || {};
+    const rawCustomData = custom_fields || customer?.custom_fields || customer?.customer_data || {};
     
+    // Normalize custom fields
+    let customData = {};
+    if (typeof rawCustomData === 'object' && rawCustomData !== null) {
+      customData = { ...rawCustomData };
+    } else if (typeof rawCustomData === 'string') {
+      try {
+        customData = JSON.parse(rawCustomData);
+      } catch {
+        customData = { details: rawCustomData };
+      }
+    }
+
+    // Build human-readable formatted block for notes/comments
+    const customFieldLines = Object.entries(customData)
+      .map(([k, v]) => `• ${k.replace(/^custom_field_/, '').replace(/_/g, ' ')}: ${v}`)
+      .join('\n');
+    
+    const combinedNotes = [
+      notes || customer?.notes || '',
+      customFieldLines ? `[بيانات التفعيل والتسليم / Fulfillment Fields]:\n${customFieldLines}` : ''
+    ].filter(Boolean).join('\n\n');
+
     const formattedItems = (items || []).map(it => ({
       product_id: it.product_id || it.supplier_product_id || it.item_id,
       item_id: it.supplier_item_id || it.item_id || it.product_id,
       quantity: it.quantity || 1,
-      custom_fields: it.custom_fields || customData,
+      custom_fields: customData,
+      custom_data: customData,
+      fields: customData,
       ...customData
     }));
 
@@ -144,8 +168,10 @@ export class SupplierApiClient {
       name: customer?.name,
       email: customer?.email,
       phone: customer?.phone,
-      notes: notes || customer?.notes || '',
+      notes: combinedNotes,
       custom_fields: customData,
+      custom_data: customData,
+      fields: customData,
       ...customData
     };
 
@@ -159,8 +185,14 @@ export class SupplierApiClient {
         customer: formattedCustomer,
         items: formattedItems,
         custom_fields: customData,
-        notes: notes || customer?.notes || '',
-        shipping_address: shipping_address || {}
+        custom_data: customData,
+        fields: customData,
+        customer_data: customData,
+        notes: combinedNotes,
+        customer_notes: combinedNotes,
+        instructions: combinedNotes,
+        shipping_address: shipping_address || {},
+        ...customData
       }
     });
   }

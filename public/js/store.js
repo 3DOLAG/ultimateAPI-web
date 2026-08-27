@@ -639,18 +639,15 @@ const StoreApp = {
 
     // 1. If the product has custom_fields returned directly from the supplier API, use them!
     if (product && Array.isArray(product.custom_fields) && product.custom_fields.length > 0) {
-      product.custom_fields.forEach((f, idx) => {
+      for (const f of product.custom_fields) {
         if (!f) continue;
-        const labelStr = (typeof f.label === 'object' ? (f.label.en || f.label.ar) : f.label) || `field_${idx}`;
-        const rawKey = f.id || f.name || f.key || labelStr;
-        const fid = String(rawKey).trim().toLowerCase().replace(/[^a-z0-9_]/gi, '_');
-
+        const fid = f.id || `field_${Math.random().toString(36).slice(2, 7)}`;
         const labelAr = (typeof f.label === 'object' ? (f.label.ar || f.label.en) : f.label) || 'البيان المطلوب';
         const placeholderAr = (typeof f.placeholder === 'object' ? (f.placeholder.ar || f.placeholder.en) : f.placeholder) || '';
 
         let icon = '📝';
         let inputType = f.type || 'text';
-        const lowerLabel = String(labelAr).toLowerCase() + ' ' + String(labelStr).toLowerCase();
+        const lowerLabel = String(labelAr).toLowerCase();
 
         if (lowerLabel.includes('uid') || lowerLabel.includes('معرف') || lowerLabel.includes('player')) icon = '🎮';
         else if (lowerLabel.includes('email') || lowerLabel.includes('بريد') || inputType === 'email') icon = '📧';
@@ -668,7 +665,7 @@ const StoreApp = {
         });
         seenKeys.add(fid);
         seenKeys.add(lowerLabel);
-      });
+      }
     }
 
     const pName = (product?.name || '').toLowerCase();
@@ -1039,8 +1036,8 @@ const StoreApp = {
     const customFieldsObj = {};
     const customFieldDefs = this.getProductCustomFields(item.product || this.state.currentProduct, item);
     for (const f of customFieldDefs) {
-      const inputEl = document.getElementById(`custom_field_${f.id}`) || document.getElementById(`prod_custom_field_${f.id}`);
-      const val = inputEl ? inputEl.value.trim() : (this.state.customFieldValues?.[f.id] || '');
+      const inputEl = document.getElementById(`custom_field_${f.id}`);
+      const val = inputEl ? inputEl.value.trim() : '';
       if (f.required && !val) {
         this.showToast(`يرجى إدخال: ${f.label.replace(/\*/g, '').trim()}`, 'error');
         if (inputEl) {
@@ -1055,15 +1052,6 @@ const StoreApp = {
         customFieldsObj[f.id] = val;
       }
     }
-
-    // Also read any other custom product inputs present in the form
-    document.querySelectorAll('.custom-product-input').forEach(input => {
-      const rawKey = input.name ? input.name.replace(/^(custom_field_|prod_custom_field_)/, '') : input.id.replace(/^(custom_field_|prod_custom_field_)/, '');
-      const val = input.value.trim();
-      if (val && rawKey && !customFieldsObj[rawKey]) {
-        customFieldsObj[rawKey] = val;
-      }
-    });
 
     const notesEl = document.getElementById('checkoutCustNotes');
     const notes = notesEl ? notesEl.value.trim() : '';
