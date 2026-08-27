@@ -224,6 +224,97 @@ dashboardRouter.post('/pricing', requirePermission('manage_pricing'), (req, res)
 });
 
 /**
+ * GET /api/dashboard/catalog
+ * Returns products and categories with their visibility status for dashboard control
+ */
+dashboardRouter.get('/catalog', async (req, res) => {
+  try {
+    try {
+      const overrides = await blobService.loadCatalogOverrides();
+      if (overrides) {
+        dbHelper.applyCatalogOverrides(overrides);
+      }
+    } catch {}
+
+    const products = dbHelper.getProducts({ limit: 500, includeHidden: true });
+    const categories = dbHelper.getCategories('default', false, true);
+    const overrides = dbHelper.getHiddenCatalogOverrides();
+
+    res.json({
+      success: true,
+      data: {
+        products,
+        categories,
+        hidden_products_count: overrides.hiddenProductIds.length,
+        hidden_categories_count: overrides.hiddenCategoryIds.length
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/dashboard/products/:id/toggle-visibility
+ */
+dashboardRouter.post('/products/:id/toggle-visibility', requirePermission('manage_settings'), async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const isHidden = req.body.is_hidden !== undefined ? Boolean(req.body.is_hidden) : null;
+    const result = dbHelper.toggleProductVisibility(productId, isHidden);
+    if (!result) {
+      return res.status(404).json({ success: false, error: { message: 'Product not found.' } });
+    }
+
+    // Persist to Vercel Blob
+    try {
+      const overrides = dbHelper.getHiddenCatalogOverrides();
+      await blobService.saveCatalogOverrides(overrides);
+    } catch (blobErr) {
+      console.warn('[Dashboard] Failed to save catalog overrides to blob:', blobErr.message);
+    }
+
+    res.json({
+      success: true,
+      data: result,
+      message: result.is_hidden ? `تم إخفاء المنتج "${result.name || productId}" من المتجر بنجاح 👁️‍🗨️` : `تم إظهار المنتج "${result.name || productId}" في المتجر بنجاح 👁️`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/dashboard/categories/:id/toggle-visibility
+ */
+dashboardRouter.post('/categories/:id/toggle-visibility', requirePermission('manage_settings'), async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const isHidden = req.body.is_hidden !== undefined ? Boolean(req.body.is_hidden) : null;
+    const result = dbHelper.toggleCategoryVisibility(categoryId, isHidden);
+    if (!result) {
+      return res.status(404).json({ success: false, error: { message: 'Category not found.' } });
+    }
+
+    // Persist to Vercel Blob
+    try {
+      const overrides = dbHelper.getHiddenCatalogOverrides();
+      await blobService.saveCatalogOverrides(overrides);
+    } catch (blobErr) {
+      console.warn('[Dashboard] Failed to save catalog overrides to blob:', blobErr.message);
+    }
+
+    res.json({
+      success: true,
+      data: result,
+      message: result.is_hidden ? `تم إخفاء القسم "${result.name || result.slug || categoryId}" وجميع منتجاته من المتجر 👁️‍🗨️` : `تم إظهار القسم "${result.name || result.slug || categoryId}" في المتجر بنجاح 👁️`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
  * GET & POST /api/dashboard/payment-methods
  */
 dashboardRouter.get('/payment-methods', async (req, res) => {

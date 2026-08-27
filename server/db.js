@@ -291,6 +291,10 @@ export function initDatabase() {
   try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN customer_data_json TEXT NOT NULL DEFAULT '{}';`); } catch {}
   try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN customer_notes TEXT;`); } catch {}
   try { db.exec(`ALTER TABLE reseller_products ADD COLUMN custom_fields_json TEXT NOT NULL DEFAULT '[]';`); } catch {}
+  try { db.exec(`ALTER TABLE reseller_products ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`); } catch {}
+  try { db.exec(`ALTER TABLE reseller_categories ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`); } catch {}
+  try { db.exec(`CREATE INDEX IF NOT EXISTS idx_reseller_prod_hidden ON reseller_products(is_hidden);`); } catch {}
+  try { db.exec(`CREATE INDEX IF NOT EXISTS idx_reseller_cat_hidden ON reseller_categories(is_hidden);`); } catch {}
   try { db.exec(`ALTER TABLE reseller_users ADD COLUMN discord_id TEXT;`); } catch {}
   try { db.exec(`ALTER TABLE reseller_users ADD COLUMN avatar_url TEXT;`); } catch {}
   try { db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_reseller_users_discord ON reseller_users(discord_id) WHERE discord_id IS NOT NULL;`); } catch {}
@@ -404,14 +408,15 @@ export const dbHelper = {
     );
   },
 
-  getCategories(resellerId = 'default', nonEmptyOnly = false) {
+  getCategories(resellerId = 'default', nonEmptyOnly = false, includeHidden = false) {
     let sql = `
       SELECT * FROM (
-        SELECT c.*, m.margin_percent, m.margin_fixed, m.is_active as margin_active,
+        SELECT c.*, COALESCE(c.is_hidden, 0) as is_hidden, m.margin_percent, m.margin_fixed, m.is_active as margin_active,
           (
             SELECT COUNT(*) 
             FROM reseller_products p 
             WHERE p.status = 'active' 
+              AND (p.is_hidden IS NULL OR p.is_hidden = 0)
               AND (
                 p.category_id = c.id 
                 OR p.category_id = c.supplier_category_id 
@@ -437,8 +442,17 @@ export const dbHelper = {
       )
     `;
 
+    const conditions = [];
+    if (!includeHidden) {
+      conditions.push(`(is_hidden IS NULL OR is_hidden = 0)`);
+    }
+
     if (nonEmptyOnly) {
-      sql += ` WHERE product_count > 0`;
+      conditions.push(`product_count > 0`);
+    }
+
+    if (conditions.length > 0) {
+      sql += ` WHERE ` + conditions.join(' AND ');
     }
 
     sql += ` ORDER BY sort_order ASC, name ASC`;
@@ -624,9 +638,18 @@ export const dbHelper = {
     );
   },
 
-  getProducts({ category, search, inStockOnly, sort = 'newest', limit = 50, offset = 0, resellerId = 'default' } = {}) {
+  getProducts({ category, search, inStockOnly, sort = 'newest', limit = 50, offset = 0, resellerId = 'default', includeHidden = false } = {}) {
     let query = `SELECT * FROM reseller_products WHERE reseller_id = ? AND status = 'active'`;
     const params = [resellerId];
+
+    if (!includeHidden) {
+      query += ` AND (is_hidden IS NULL OR is_hidden = 0)`;
+      query += ` AND (
+        category_id NOT IN (SELECT supplier_category_id FROM reseller_categories WHERE is_hidden = 1)
+        AND category_id NOT IN (SELECT id FROM reseller_categories WHERE is_hidden = 1)
+        AND category_id NOT IN (SELECT slug FROM reseller_categories WHERE is_hidden = 1)
+      )`;
+    }
 
     if (category && category !== 'all') {
       query += ` AND (
@@ -670,14 +693,57 @@ export const dbHelper = {
     return rows.map(r => this.hydrateProduct(r));
   },
 
-  getProductByIdOrSlug(idOrSlug, resellerId = 'default') {
-    const stmt = db.prepare(`
+  getProductByIdOrSlug(idOrSlug, resellerId = 'default', includeHidden = false) {
+    let sql = `
       SELECT * FROM reseller_products 
       WHERE reseller_id = ? AND (id = ? OR supplier_product_id = ? OR slug = ?)
-    `);
+    `;
+    if (!includeHidden) {
+      sql += ` AND (is_hidden IS NULL OR is_hidden = 0)`;
+    }
+    const stmt = db.prepare(sql);
     const row = stmt.get(resellerId, idOrSlug, idOrSlug, idOrSlug);
     if (!row) return null;
     return this.hydrateProduct(row);
+  },
+
+  toggleProductVisibility(productId, isHidden = null, resellerId = 'default') {
+    const prod = this.getProductByIdOrSlug(productId, resellerId, true);
+    if (!prod) return null;
+    const newHidden = isHidden !== null ? (isHidden ? 1 : 0) : (prod.is_hidden ? 0 : 1);
+    const stmt = db.prepare(`UPDATE reseller_products SET is_hidden = ? WHERE id = ? OR supplier_product_id = ? OR slug = ?`);
+    stmt.run(newHidden, prod.id, prod.supplier_product_id || prod.id, prod.slug);
+    return { id: prod.id, name: prod.name, is_hidden: Boolean(newHidden) };
+  },
+
+  toggleCategoryVisibility(categoryId, isHidden = null, resellerId = 'default') {
+    const cat = this.getCategoryBySlugOrId(categoryId, resellerId);
+    if (!cat) return null;
+    const currentHidden = Boolean(cat.is_hidden);
+    const newHidden = isHidden !== null ? (isHidden ? 1 : 0) : (currentHidden ? 0 : 1);
+    const stmt = db.prepare(`UPDATE reseller_categories SET is_hidden = ? WHERE id = ? OR supplier_category_id = ? OR slug = ?`);
+    stmt.run(newHidden, cat.id, cat.supplier_category_id || cat.id, cat.slug);
+    return { id: cat.id, slug: cat.slug, name: cat.name, is_hidden: Boolean(newHidden) };
+  },
+
+  getHiddenCatalogOverrides(resellerId = 'default') {
+    const hiddenProds = db.prepare(`SELECT id, supplier_product_id, slug FROM reseller_products WHERE is_hidden = 1 AND reseller_id = ?`).all(resellerId);
+    const hiddenCats = db.prepare(`SELECT id, supplier_category_id, slug FROM reseller_categories WHERE is_hidden = 1 AND reseller_id = ?`).all(resellerId);
+    return {
+      hiddenProductIds: hiddenProds.map(p => p.supplier_product_id || p.id),
+      hiddenCategoryIds: hiddenCats.map(c => c.supplier_category_id || c.slug || c.id)
+    };
+  },
+
+  applyCatalogOverrides({ hiddenProductIds = [], hiddenCategoryIds = [] } = {}) {
+    if (Array.isArray(hiddenProductIds) && hiddenProductIds.length > 0) {
+      const stmt = db.prepare(`UPDATE reseller_products SET is_hidden = 1 WHERE id = ? OR supplier_product_id = ? OR slug = ?`);
+      hiddenProductIds.forEach(id => stmt.run(String(id), String(id), String(id)));
+    }
+    if (Array.isArray(hiddenCategoryIds) && hiddenCategoryIds.length > 0) {
+      const stmt = db.prepare(`UPDATE reseller_categories SET is_hidden = 1 WHERE id = ? OR supplier_category_id = ? OR slug = ?`);
+      hiddenCategoryIds.forEach(id => stmt.run(String(id), String(id), String(id)));
+    }
   },
 
   resolveVariantDisplayName(variant, optionGroups = []) {
@@ -860,6 +926,7 @@ export const dbHelper = {
       currency: row.currency,
       stock_quantity: isProductAvailable ? row.stock_quantity : 0,
       is_available: isProductAvailable,
+      is_hidden: Boolean(row.is_hidden),
       items,
       variants: items,
       status: row.status,

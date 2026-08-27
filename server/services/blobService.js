@@ -98,6 +98,51 @@ export const blobService = {
   },
 
   /**
+   * Save catalog visibility overrides (hidden products & categories) to Vercel Blob
+   */
+  async saveCatalogOverrides(overrides) {
+    const token = process.env.BLOB_READ_WRITE_TOKEN || config.blob?.token;
+    if (!token) return null;
+
+    try {
+      const blob = await put('catalog/visibility-overrides.json', JSON.stringify(overrides, null, 2), {
+        access: 'public',
+        contentType: 'application/json',
+        token,
+        addRandomSuffix: false,
+        allowOverwrite: true
+      });
+      console.log('[BlobService] ✅ Catalog visibility overrides saved to Vercel Blob');
+      return blob;
+    } catch (err) {
+      console.error('[BlobService] ❌ Failed to save catalog overrides to blob:', err.message);
+      return null;
+    }
+  },
+
+  /**
+   * Load catalog visibility overrides (hidden products & categories) from Vercel Blob
+   */
+  async loadCatalogOverrides() {
+    const token = process.env.BLOB_READ_WRITE_TOKEN || config.blob?.token;
+    if (!token) return null;
+
+    try {
+      const { blobs } = await list({ prefix: 'catalog/visibility-overrides', token });
+      if (blobs && blobs.length > 0) {
+        const latest = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
+        const res = await fetch(`${latest.url}?_t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          return await res.json();
+        }
+      }
+    } catch (err) {
+      console.warn('[BlobService] ⚠️ Failed to load catalog overrides from blob:', err.message);
+    }
+    return null;
+  },
+
+  /**
    * Load payment methods from Vercel Blob
    */
   async loadPaymentMethods() {
@@ -106,8 +151,9 @@ export const blobService = {
 
     try {
       const { blobs } = await list({ prefix: 'payment-methods/methods', token });
-      if (blobs.length > 0) {
-        const res = await fetch(blobs[0].url);
+      if (blobs && blobs.length > 0) {
+        const latest = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
+        const res = await fetch(`${latest.url}?_t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           return await res.json();
         }

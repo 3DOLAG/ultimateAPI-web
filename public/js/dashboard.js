@@ -585,60 +585,258 @@ const DashboardApp = {
   },
 
   // -------------------------------------------------------------
-  // 5. Catalog View & Sync
+  // 5. Catalog View & Visibility Control
   // -------------------------------------------------------------
+  switchCatalogSubTab(tab) {
+    this.state.catalogSubTab = tab;
+    const btnProd = document.getElementById('btnCatalogTabProducts');
+    const btnCat = document.getElementById('btnCatalogTabCategories');
+    const viewProd = document.getElementById('catalogProductsView');
+    const viewCat = document.getElementById('catalogCategoriesView');
+
+    if (tab === 'products') {
+      if (btnProd) {
+        btnProd.style.background = 'var(--accent-primary)';
+        btnProd.style.color = '#fff';
+        btnProd.style.borderColor = 'var(--border-accent)';
+      }
+      if (btnCat) {
+        btnCat.style.background = 'var(--bg-surface-elevated)';
+        btnCat.style.color = 'var(--text-secondary)';
+        btnCat.style.borderColor = 'var(--border-subtle)';
+      }
+      if (viewProd) viewProd.style.display = 'block';
+      if (viewCat) viewCat.style.display = 'none';
+    } else {
+      if (btnCat) {
+        btnCat.style.background = 'var(--accent-primary)';
+        btnCat.style.color = '#fff';
+        btnCat.style.borderColor = 'var(--border-accent)';
+      }
+      if (btnProd) {
+        btnProd.style.background = 'var(--bg-surface-elevated)';
+        btnProd.style.color = 'var(--text-secondary)';
+        btnProd.style.borderColor = 'var(--border-subtle)';
+      }
+      if (viewProd) viewProd.style.display = 'none';
+      if (viewCat) viewCat.style.display = 'block';
+    }
+    this.filterCatalogTable();
+  },
+
   async loadCatalog() {
+    const prodTbody = document.getElementById('catalogTableBody');
+    const catTbody = document.getElementById('catalogCategoriesTableBody');
+    if (!prodTbody && !catTbody) return;
+
+    try {
+      const res = await fetch('/api/dashboard/catalog');
+      const json = await res.json();
+
+      if (json.success && json.data) {
+        this.state.catalogProducts = json.data.products || [];
+        this.state.catalogCategories = json.data.categories || [];
+
+        const prodCountEl = document.getElementById('catalogProductsTotalCount');
+        const catCountEl = document.getElementById('catalogCategoriesTotalCount');
+        if (prodCountEl) prodCountEl.textContent = this.state.catalogProducts.length;
+        if (catCountEl) catCountEl.textContent = this.state.catalogCategories.length;
+
+        this.filterCatalogTable();
+      }
+    } catch (e) {
+      if (prodTbody) prodTbody.innerHTML = `<tr><td colspan="7">فشل تحميل المنتجات.</td></tr>`;
+      if (catTbody) catTbody.innerHTML = `<tr><td colspan="6">فشل تحميل الأقسام.</td></tr>`;
+    }
+  },
+
+  filterCatalogTable() {
+    const search = (document.getElementById('catalogSearchInput')?.value || '').trim().toLowerCase();
+    const filter = document.getElementById('catalogVisibilityFilter')?.value || 'all';
+
+    // 1. Filter Products
+    const filteredProducts = (this.state.catalogProducts || []).filter(p => {
+      const matchSearch = !search || 
+        (p.name && p.name.toLowerCase().includes(search)) || 
+        (p.name_ar && p.name_ar.toLowerCase().includes(search)) || 
+        (p.category_id && p.category_id.toLowerCase().includes(search)) ||
+        (p.slug && p.slug.toLowerCase().includes(search));
+
+      const isHidden = Boolean(p.is_hidden);
+      const matchVisibility = filter === 'all' || 
+        (filter === 'visible' && !isHidden) || 
+        (filter === 'hidden' && isHidden);
+
+      return matchSearch && matchVisibility;
+    });
+    this.renderCatalogProducts(filteredProducts);
+
+    // 2. Filter Categories
+    const filteredCategories = (this.state.catalogCategories || []).filter(c => {
+      const matchSearch = !search || 
+        (c.name && c.name.toLowerCase().includes(search)) || 
+        (c.name_ar && c.name_ar.toLowerCase().includes(search)) || 
+        (c.slug && c.slug.toLowerCase().includes(search));
+
+      const isHidden = Boolean(c.is_hidden);
+      const matchVisibility = filter === 'all' || 
+        (filter === 'visible' && !isHidden) || 
+        (filter === 'hidden' && isHidden);
+
+      return matchSearch && matchVisibility;
+    });
+    this.renderCatalogCategories(filteredCategories);
+  },
+
+  renderCatalogProducts(products) {
     const tbody = document.getElementById('catalogTableBody');
     if (!tbody) return;
 
-    try {
-      const res = await fetch('/api/products?limit=100');
-      const json = await res.json();
+    if (!products || products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-tertiary); padding: 30px;">لا توجد منتجات مطابقة للبحث أو الفلتر.</td></tr>`;
+      return;
+    }
 
-      if (json.success && Array.isArray(json.data)) {
-        this.state.products = json.data;
-        tbody.innerHTML = json.data.map(p => `
-          <tr>
-            <td><strong>${p.name}</strong></td>
-            <td>${p.category_id}</td>
-            <td>${(p.items || []).length} options</td>
-            <td style="color: var(--text-tertiary);">${p.price_base || 0} ${p.currency}</td>
-            <td><strong style="color: var(--accent-light);">${p.price} ${p.currency}</strong></td>
-            <td><span class="badge ${p.is_available ? 'badge-success' : 'badge-danger'}">${p.is_available ? 'In Stock' : 'Out of Stock'}</span></td>
-          </tr>
-        `).join('');
+    tbody.innerHTML = products.map(p => {
+      const isHidden = Boolean(p.is_hidden);
+      const imgUrl = (Array.isArray(p.images) && p.images.length > 0) ? p.images[0] : '';
+      const fallbackInitial = (p.name || 'P').charAt(0).toUpperCase();
+
+      return `
+        <tr style="${isHidden ? 'opacity: 0.65; background: rgba(239, 68, 68, 0.04);' : ''}">
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              ${imgUrl 
+                ? `<img src="${imgUrl}" alt="${p.name}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-subtle);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                   <div style="width: 36px; height: 36px; background: var(--bg-surface-elevated); border-radius: 6px; display: none; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-light);">${fallbackInitial}</div>`
+                : `<div style="width: 36px; height: 36px; background: var(--bg-surface-elevated); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-light);">${fallbackInitial}</div>`
+              }
+              <div>
+                <strong style="display: block; font-size: 0.9rem;">${p.name_ar || p.name}</strong>
+                <span style="font-size: 0.75rem; color: var(--text-tertiary);">${p.name !== (p.name_ar || p.name) ? p.name : p.slug}</span>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge badge-neutral">${p.category_id}</span></td>
+          <td>${(p.items || []).length} باقة / خيار</td>
+          <td style="color: var(--text-tertiary);">${p.price_base || 0} ${p.currency}</td>
+          <td><strong style="color: var(--accent-light);">${p.price} ${p.currency}</strong></td>
+          <td>
+            ${isHidden 
+              ? `<span class="badge badge-danger" style="display: inline-flex; align-items: center; gap: 4px;">🚫 مخفي من المتجر</span>`
+              : `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 4px;">👁️ معروض بالمتجر</span>`
+            }
+          </td>
+          <td style="text-align: center;">
+            <button class="btn btn-sm ${isHidden ? 'btn-success' : 'btn-danger'}" onclick="DashboardApp.toggleProductVisibility('${p.id || p.supplier_product_id}')" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; font-size: 0.78rem;">
+              ${isHidden ? '👁️ إظهار بالمتجر' : '👁️‍🗨️ إخفاء من المتجر'}
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  renderCatalogCategories(categories) {
+    const tbody = document.getElementById('catalogCategoriesTableBody');
+    if (!tbody) return;
+
+    if (!categories || categories.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-tertiary); padding: 30px;">لا توجد أقسام مطابقة للبحث أو الفلتر.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = categories.map(c => {
+      const isHidden = Boolean(c.is_hidden);
+      const catId = c.id || c.supplier_category_id || c.slug;
+
+      return `
+        <tr style="${isHidden ? 'opacity: 0.65; background: rgba(239, 68, 68, 0.04);' : ''}">
+          <td>
+            <strong style="display: block; font-size: 0.9rem;">${c.name_ar || c.name}</strong>
+            <span style="font-size: 0.75rem; color: var(--text-tertiary);">${c.name}</span>
+          </td>
+          <td><code style="font-family: var(--font-mono); font-size: 0.8rem;">${c.slug || c.supplier_category_id || c.id}</code></td>
+          <td><strong style="color: var(--accent-light);">${c.product_count || 0}</strong> منتج</td>
+          <td>${c.margin_percent ?? 15}%</td>
+          <td>
+            ${isHidden 
+              ? `<span class="badge badge-danger" style="display: inline-flex; align-items: center; gap: 4px;">🚫 مخفي بالكامل</span>`
+              : `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 4px;">👁️ معروض بالمتجر</span>`
+            }
+          </td>
+          <td style="text-align: center;">
+            <button class="btn btn-sm ${isHidden ? 'btn-success' : 'btn-danger'}" onclick="DashboardApp.toggleCategoryVisibility('${catId}')" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; font-size: 0.78rem;">
+              ${isHidden ? '👁️ إظهار القسم' : '👁️‍🗨️ إخفاء القسم بالكامل'}
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  async toggleProductVisibility(productId) {
+    try {
+      const res = await fetch(`/api/dashboard/products/${encodeURIComponent(productId)}/toggle-visibility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const json = await res.json();
+      if (json.success) {
+        this.showToast(json.message || 'تم تحديث حالة ظهور المنتج بنجاح!', 'success');
+        this.loadCatalog();
+      } else {
+        throw new Error(json.error?.message || json.error || 'فشل تحديث حالة المنتج');
       }
-    } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="6">Failed to load catalog cache.</td></tr>`;
+    } catch (err) {
+      this.showToast(`خطأ: ${err.message}`, 'error');
+    }
+  },
+
+  async toggleCategoryVisibility(categoryId) {
+    try {
+      const res = await fetch(`/api/dashboard/categories/${encodeURIComponent(categoryId)}/toggle-visibility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const json = await res.json();
+      if (json.success) {
+        this.showToast(json.message || 'تم تحديث حالة ظهور القسم بنجاح!', 'success');
+        this.loadCatalog();
+      } else {
+        throw new Error(json.error?.message || json.error || 'فشل تحديث حالة القسم');
+      }
+    } catch (err) {
+      this.showToast(`خطأ: ${err.message}`, 'error');
     }
   },
 
   async triggerFullSync() {
-    this.showToast('Triggering full catalog synchronization...', 'info');
+    this.showToast('جاري بدء المزامنة الشاملة للكتالوج من المورّد...', 'info');
     try {
       const res = await fetch('/api/dashboard/sync/full', { method: 'POST' });
       const json = await res.json();
       if (json.success) {
-        this.showToast(`Sync complete: ${json.data.products_synced} products refreshed`, 'success');
+        this.showToast(`تمت المزامنة بنجاح: تم تحديث ${json.data.products_synced} منتج 🚀`, 'success');
         this.loadCatalog();
         this.loadOverviewMetrics();
       }
     } catch (err) {
-      this.showToast(`Sync error: ${err.message}`, 'error');
+      this.showToast(`خطأ أثناء المزامنة: ${err.message}`, 'error');
     }
   },
 
   async triggerDeltaSync() {
-    this.showToast('Synchronizing delta changes...', 'info');
+    this.showToast('جاري تحديث التغييرات الأخيرة...', 'info');
     try {
       const res = await fetch('/api/dashboard/sync/delta', { method: 'POST' });
       const json = await res.json();
       if (json.success) {
-        this.showToast('Delta sync complete!', 'success');
+        this.showToast('تمت مزامنة التغييرات بنجاح!', 'success');
         this.loadOverviewMetrics();
       }
     } catch (err) {
-      this.showToast(`Sync error: ${err.message}`, 'error');
+      this.showToast(`خطأ أثناء المزامنة: ${err.message}`, 'error');
     }
   },
 

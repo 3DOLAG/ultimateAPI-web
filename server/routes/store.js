@@ -49,14 +49,25 @@ export async function getMergedSettings() {
 }
 
 /**
- * Helper: ensure database catalog is populated from supplier API if empty
+ * Helper: ensure database catalog is populated from supplier API if empty and apply overrides
  */
 async function ensureCatalogSynced() {
+  try {
+    const overrides = await blobService.loadCatalogOverrides();
+    if (overrides) {
+      dbHelper.applyCatalogOverrides(overrides);
+    }
+  } catch {}
+
   const cats = dbHelper.getCategories('default', true);
   if (!cats || cats.length === 0) {
     try {
       console.log('[Store] Empty catalog detected. Fetching live catalog from Supplier API...');
       await syncEngine.runFullSync();
+      const overrides = await blobService.loadCatalogOverrides();
+      if (overrides) {
+        dbHelper.applyCatalogOverrides(overrides);
+      }
     } catch (err) {
       console.warn('[Store] Live catalog sync notice:', err.message);
     }

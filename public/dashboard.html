@@ -134,32 +134,79 @@
         </div>
 
         <!-- =================================================== -->
-        <!-- TAB 5: CATALOG & SYNC -->
+        <!-- TAB 5: CATALOG & VISIBILITY CONTROL -->
         <!-- =================================================== -->
         <div id="tab-catalog" class="dashboard-tab-content">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
             <div>
-              <h2 style="font-size: 1.3rem; font-weight: 700;">Authoritative Catalog Cache</h2>
-              <p style="color: var(--text-secondary); font-size: 0.875rem;">Synchronized from Supplier API into local high-speed SQLite cache.</p>
+              <h2 style="font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <span>📦</span> <span>إدارة الكتالوج وإظهار/إخفاء المنتجات والأقسام</span>
+              </h2>
+              <p style="color: var(--text-secondary); font-size: 0.875rem;">تحكم في ظهور أو إخفاء أي منتج أو قسم بالكامل من واجهة المتجر بنقرة واحدة.</p>
             </div>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.triggerFullSync()">Full Catalog Sync 🔄</button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.triggerFullSync()" style="display: inline-flex; align-items: center; gap: 6px;">
+                <span>🔄</span> <span>تحديث الكتالوج من المورّد</span>
+              </button>
             </div>
           </div>
 
-          <div class="data-table-wrap">
+          <!-- Catalog Metrics & Visibility Sub-Tabs -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+            <div style="display: flex; gap: 8px;">
+              <button id="btnCatalogTabProducts" class="btn btn-sm" onclick="DashboardApp.switchCatalogSubTab('products')" style="background: var(--accent-primary); color: #fff; border: 1px solid var(--border-accent); font-weight: 700;">
+                🎮 المنتجات (<span id="catalogProductsTotalCount">0</span>)
+              </button>
+              <button id="btnCatalogTabCategories" class="btn btn-sm btn-secondary" onclick="DashboardApp.switchCatalogSubTab('categories')" style="font-weight: 600;">
+                📁 الأقسام والتصنيفات (<span id="catalogCategoriesTotalCount">0</span>)
+              </button>
+            </div>
+
+            <!-- Search & Filters -->
+            <div style="display: flex; gap: 10px; align-items: center; flex: 1; max-width: 500px;">
+              <input type="text" id="catalogSearchInput" class="form-input" placeholder="🔍 بحث بالاسم أو القسم..." oninput="DashboardApp.filterCatalogTable()" style="padding: 7px 12px; font-size: 0.84rem;">
+              <select id="catalogVisibilityFilter" class="form-input" onchange="DashboardApp.filterCatalogTable()" style="width: auto; min-width: 140px; padding: 7px 12px; font-size: 0.84rem;">
+                <option value="all">جميع الحالات</option>
+                <option value="visible">المعروض فقط 👁️</option>
+                <option value="hidden">المخفي فقط 🚫</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 1. PRODUCTS TABLE VIEW -->
+          <div id="catalogProductsView" class="data-table-wrap">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Product</th>
-                  <th>Category</th>
-                  <th>Variants / Items</th>
-                  <th>Base Supplier Cost</th>
-                  <th>Effective Customer Price</th>
-                  <th>Stock Status</th>
+                  <th style="min-width: 240px;">المنتج</th>
+                  <th>القسم</th>
+                  <th>الخيارات / الباقات</th>
+                  <th>سعر التكلفة</th>
+                  <th>سعر البيع</th>
+                  <th>حالة الظهور بالمتجر</th>
+                  <th style="text-align: center; min-width: 140px;">إجراءات الظهور</th>
                 </tr>
               </thead>
               <tbody id="catalogTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 2. CATEGORIES TABLE VIEW -->
+          <div id="catalogCategoriesView" class="data-table-wrap" style="display: none;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="min-width: 220px;">اسم القسم</th>
+                  <th>المعرّف (Slug / ID)</th>
+                  <th>عدد المنتجات النشطة</th>
+                  <th>هامش الربح</th>
+                  <th>حالة الظهور بالمتجر</th>
+                  <th style="text-align: center; min-width: 160px;">إجراءات القسم</th>
+                </tr>
+              </thead>
+              <tbody id="catalogCategoriesTableBody">
                 <!-- Injected via JS -->
               </tbody>
             </table>
