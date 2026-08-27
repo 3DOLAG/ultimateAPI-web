@@ -1,8 +1,13 @@
-import { put, del } from '@vercel/blob';
+import { put, del, list } from '@vercel/blob';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { config } from '../config.js';
+
+// In-memory cache for settings to avoid repeated blob fetches within the same cold start
+let _settingsCache = null;
+let _settingsCacheTime = 0;
+const SETTINGS_CACHE_TTL = 15000; // 15 seconds
 
 export const blobService = {
   /**
@@ -10,6 +15,60 @@ export const blobService = {
    */
   isBlobConfigured() {
     return Boolean(process.env.BLOB_READ_WRITE_TOKEN || config.blob?.token);
+  },
+
+  /**
+   * Save store settings as a JSON blob for persistent storage on Vercel
+   */
+  async saveSettings(settingsObj) {
+    const token = process.env.BLOB_READ_WRITE_TOKEN || config.blob?.token;
+    if (!token) return null;
+
+    try {
+      const blob = await put('settings/store-settings.json', JSON.stringify(settingsObj, null, 2), {
+        access: 'public',
+        contentType: 'application/json',
+        token,
+        addRandomSuffix: false
+      });
+      // Update cache
+      _settingsCache = settingsObj;
+      _settingsCacheTime = Date.now();
+      console.log('[BlobService] ✅ Settings saved to Vercel Blob');
+      return blob;
+    } catch (err) {
+      console.error('[BlobService] ❌ Failed to save settings to blob:', err.message);
+      return null;
+    }
+  },
+
+  /**
+   * Load store settings from Vercel Blob
+   */
+  async loadSettings() {
+    const token = process.env.BLOB_READ_WRITE_TOKEN || config.blob?.token;
+    if (!token) return null;
+
+    // Return cached if fresh
+    if (_settingsCache && (Date.now() - _settingsCacheTime) < SETTINGS_CACHE_TTL) {
+      return _settingsCache;
+    }
+
+    try {
+      const { blobs } = await list({ prefix: 'settings/store-settings', token });
+      if (blobs.length > 0) {
+        const res = await fetch(blobs[0].url);
+        if (res.ok) {
+          const data = await res.json();
+          _settingsCache = data;
+          _settingsCacheTime = Date.now();
+          return data;
+        }
+      }
+    } catch (err) {
+      console.warn('[BlobService] ⚠️ Failed to load settings from blob:', err.message);
+    }
+    return null;
   },
 
   /**

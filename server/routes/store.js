@@ -3,54 +3,77 @@ import { dbHelper } from '../db.js';
 import { stockValidator } from '../services/stockValidator.js';
 import { config } from '../config.js';
 import { generateDynamicCss, resolveTheme } from '../services/themeEngine.js';
+import { blobService } from ''../services/blobService.js;
 
 export const storeRouter = express.Router();
 
 /**
+ * Helper: merge settings from blob (persistent) → db (ephemeral) → env defaults
+ */
+async function getMergedSettings() {
+  const dbSettings = dbHelper.getStoreSettings();
+  let blobSettings = null;
+  try {
+    blobSettings = await blobService.loadSettings();
+  } catch (e) { /* blob not available */ }
+  // Blob wins over db, db wins over env defaults
+  return { ...dbSettings, ...(blobSettings || {}) };
+}
+
+/**
  * GET /api/theme.css & /theme.css
  */
-storeRouter.get(['/theme.css', '/theme/style.css'], (req, res) => {
-  const settings = dbHelper.getStoreSettings();
-  const themeConfig = {
-    themePreset: settings.theme_preset || config.store.themePreset,
-    themePrimaryColor: settings.theme_primary_color || config.store.themePrimaryColor,
-    themePrimaryHover: settings.theme_primary_hover || config.store.themePrimaryHover,
-    themeAccentColor: settings.theme_accent_color || config.store.themeAccentColor,
-    themeBgColor: settings.theme_bg_color || config.store.themeBgColor,
-    themeSurfaceColor: settings.theme_surface_color || config.store.themeSurfaceColor
-  };
-  res.setHeader('Content-Type', 'text/css');
-  res.setHeader('Cache-Control', 'public, max-age=10');
-  res.send(generateDynamicCss(themeConfig));
+storeRouter.get(['/theme.css', '/theme/style.css'], async (req, res) => {
+  try {
+    const settings = await getMergedSettings();
+    const themeConfig = {
+      themePreset: settings.theme_preset || config.store.themePreset,
+      themePrimaryColor: settings.theme_primary_color || config.store.themePrimaryColor,
+      themePrimaryHover: settings.theme_primary_hover || config.store.themePrimaryHover,
+      themeAccentColor: settings.theme_accent_color || config.store.themeAccentColor,
+      themeBgColor: settings.theme_bg_color || config.store.themeBgColor,
+      themeSurfaceColor: settings.theme_surface_color || config.store.themeSurfaceColor
+    };
+    res.setHeader('Content-Type', 'text/css');
+    res.setHeader('Cache-Control', 'public, max-age=10');
+    res.send(generateDynamicCss(themeConfig));
+  } catch (err) {
+    res.setHeader('Content-Type', 'text/css');
+    res.send('/* error loading theme */');
+  }
 });
 
 /**
  * GET /api/store/info & /api/info
  */
-storeRouter.get(['/info', '/store/info'], (req, res) => {
-  const settings = dbHelper.getStoreSettings();
-  const themeConfig = {
-    themePreset: settings.theme_preset || config.store.themePreset,
-    themePrimaryColor: settings.theme_primary_color || config.store.themePrimaryColor,
-    themePrimaryHover: settings.theme_primary_hover || config.store.themePrimaryHover,
-    themeAccentColor: settings.theme_accent_color || config.store.themeAccentColor,
-    themeBgColor: settings.theme_bg_color || config.store.themeBgColor,
-    themeSurfaceColor: settings.theme_surface_color || config.store.themeSurfaceColor
-  };
-  res.json({
-    success: true,
-    data: {
-      name: settings.store_name || config.store.name,
-      tagline: settings.tagline || config.store.tagline,
-      logo_url: settings.logo_url || config.store.logoUrl || '',
-      currency: settings.currency || config.store.currency,
-      currency_symbol: settings.currency_symbol || config.store.currencySymbol,
-      support_whatsapp: settings.support_whatsapp || config.store.whatsapp,
-      support_discord: settings.support_discord || config.store.discord,
-      support_tiktok: settings.support_tiktok || config.store.tiktok,
-      theme: resolveTheme(themeConfig)
-    }
-  });
+storeRouter.get(['/info', '/store/info'], async (req, res) => {
+  try {
+    const settings = await getMergedSettings();
+    const themeConfig = {
+      themePreset: settings.theme_preset || config.store.themePreset,
+      themePrimaryColor: settings.theme_primary_color || config.store.themePrimaryColor,
+      themePrimaryHover: settings.theme_primary_hover || config.store.themePrimaryHover,
+      themeAccentColor: settings.theme_accent_color || config.store.themeAccentColor,
+      themeBgColor: settings.theme_bg_color || config.store.themeBgColor,
+      themeSurfaceColor: settings.theme_surface_color || config.store.themeSurfaceColor
+    };
+    res.json({
+      success: true,
+      data: {
+        name: settings.store_name || config.store.name,
+        tagline: settings.tagline || config.store.tagline,
+        logo_url: settings.logo_url || config.store.logoUrl || '',
+        currency: settings.currency || config.store.currency,
+        currency_symbol: settings.currency_symbol || config.store.currencySymbol,
+        support_whatsapp: settings.support_whatsapp || config.store.whatsapp,
+        support_discord: settings.support_discord || config.store.discord,
+        support_tiktok: settings.support_tiktok || config.store.tiktok,
+        theme: resolveTheme(themeConfig)
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 /**

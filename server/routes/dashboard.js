@@ -357,9 +357,15 @@ dashboardRouter.get('/logs', (req, res) => {
 /**
  * Store Settings
  */
-dashboardRouter.get('/settings', (req, res) => {
+dashboardRouter.get('/settings', async (req, res) => {
   try {
-    const settings = dbHelper.getStoreSettings();
+    const dbSettings = dbHelper.getStoreSettings();
+    let blobSettings = null;
+    try {
+      blobSettings = await blobService.loadSettings();
+    } catch (e) { /* blob not available */ }
+    const settings = { ...dbSettings, ...(blobSettings || {}) };
+
     const resolvedTheme = resolveTheme({
       themePreset: settings.theme_preset || config.store.themePreset,
       themePrimaryColor: settings.theme_primary_color || config.store.themePrimaryColor,
@@ -392,9 +398,20 @@ dashboardRouter.get('/settings', (req, res) => {
   }
 });
 
-dashboardRouter.post('/settings', requirePermission('manage_settings'), (req, res) => {
+dashboardRouter.post('/settings', requirePermission('manage_settings'), async (req, res) => {
   try {
+    // Save to SQLite (ephemeral on Vercel, works locally)
     dbHelper.saveStoreSettings(req.body);
+
+    // Also save to Vercel Blob for persistent storage across serverless cold starts
+    try {
+      const existingBlob = await blobService.loadSettings();
+      const merged = { ...(existingBlob || {}), ...req.body };
+      await blobService.saveSettings(merged);
+    } catch (blobErr) {
+      console.warn('[Dashboard] Blob settings save skipped:', blobErr.message);
+    }
+
     res.json({ success: true, message: 'Settings saved.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -422,6 +439,12 @@ dashboardRouter.post('/upload-logo', requirePermission('manage_settings'), (req,
       });
 
       dbHelper.saveStoreSettings({ logo_url: result.url });
+
+      // Persist to blob for Vercel
+      try {
+        const existingBlob = await blobService.loadSettings();
+        await blobService.saveSettings({ ...(existingBlob || {}), logo_url: result.url });
+      } catch (e) { /* blob not available */ }
 
       res.json({
         success: true,
