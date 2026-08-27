@@ -2,6 +2,48 @@ import { supplierApi } from './supplierApi.js';
 import { dbHelper } from '../db.js';
 import { config } from '../config.js';
 
+/**
+ * Resolve any relative supplier image path (e.g. /api/media/game-covers/...) into an absolute URL
+ */
+export function resolveSupplierImageUrl(img) {
+  if (!img || typeof img !== 'string') return null;
+  img = img.trim();
+  if (!img) return null;
+  if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('data:')) {
+    return img;
+  }
+  const baseUrl = (config.supplier.apiUrl || 'https://utimate-eg.com/api/v1')
+    .replace(/\/api\/v1\/?$/, '')
+    .replace(/\/api\/?$/, '')
+    .replace(/\/$/, '');
+  const leadingSlash = img.startsWith('/') ? '' : '/';
+  return `${baseUrl}${leadingSlash}${img}`;
+}
+
+/**
+ * Extract and resolve all product images from diverse supplier payload keys
+ */
+export function extractProductImages(p) {
+  const list = [];
+  if (Array.isArray(p.images)) {
+    p.images.forEach(img => {
+      const url = typeof img === 'string' ? img : (img?.url || img?.src || img?.image || img?.path);
+      const resolved = resolveSupplierImageUrl(url);
+      if (resolved && !list.includes(resolved)) list.push(resolved);
+    });
+  }
+  
+  ['image', 'cover_image', 'thumbnail', 'photo', 'icon', 'img', 'banner', 'media'].forEach(k => {
+    if (p[k]) {
+      const url = typeof p[k] === 'string' ? p[k] : (p[k]?.url || p[k]?.src || p[k]?.path);
+      const resolved = resolveSupplierImageUrl(url);
+      if (resolved && !list.includes(resolved)) list.push(resolved);
+    }
+  });
+
+  return list;
+}
+
 export class SyncEngineService {
   constructor() {
     this.isSyncing = false;
@@ -49,6 +91,7 @@ export class SyncEngineService {
 
       if (Array.isArray(categories) && categories.length > 0) {
         categories.forEach(cat => {
+          const cover = resolveSupplierImageUrl(cat.cover_image || cat.image || cat.icon);
           dbHelper.upsertCategory({
             id: cat.id || `cat_${cat.slug || cat.name}`,
             supplier_category_id: cat.id || cat.supplier_category_id,
@@ -57,7 +100,7 @@ export class SyncEngineService {
             name_ar: cat.name_ar || null,
             slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
             description: cat.description || '',
-            cover_image: cat.cover_image || cat.image || null,
+            cover_image: cover,
             sort_order: cat.sort_order || 0,
             status: cat.status || (cat.is_displayed !== false ? 'active' : 'inactive')
           }, resellerId);
@@ -143,7 +186,7 @@ export class SyncEngineService {
             slug: p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
             description: p.description || '',
             description_ar: p.description_ar || null,
-            images: Array.isArray(p.images) ? p.images : (p.image ? [p.image] : (p.cover_image ? [p.cover_image] : [])),
+            images: extractProductImages(p),
             option_groups: p.option_groups || [],
             custom_fields: p.custom_fields || [],
             has_variants: items.length > 1,
@@ -253,7 +296,7 @@ export class SyncEngineService {
             slug: p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
             description: p.description || '',
             description_ar: p.description_ar || null,
-            images: Array.isArray(p.images) ? p.images : (p.image ? [p.image] : []),
+            images: extractProductImages(p),
             option_groups: p.option_groups || [],
             custom_fields: p.custom_fields || [],
             has_variants: p.has_variants || false,

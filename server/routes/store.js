@@ -4,7 +4,7 @@ import { stockValidator } from '../services/stockValidator.js';
 import { config } from '../config.js';
 import { generateDynamicCss, resolveTheme } from '../services/themeEngine.js';
 import { blobService } from '../services/blobService.js';
-import { syncEngine } from '../services/syncEngine.js';
+import { syncEngine, resolveSupplierImageUrl } from '../services/syncEngine.js';
 
 export const storeRouter = express.Router();
 
@@ -130,17 +130,26 @@ storeRouter.get('/categories/:slug', async (req, res) => {
     }
 
     const products = dbHelper.getProducts({ category: category.supplier_category_id || category.slug });
+    const sanitizedProducts = products.map(p => ({
+      ...p,
+      images: (p.images || []).map(resolveSupplierImageUrl).filter(Boolean)
+    }));
     
     // Find subcategories that have products
     const allCategories = dbHelper.getCategories('default', true);
-    const subcategories = allCategories.filter(c => c.parent_id === category.supplier_category_id || c.parent_id === category.id);
+    const subcategories = allCategories.filter(c => c.parent_id === category.supplier_category_id || c.parent_id === category.id).map(sc => ({
+      ...sc,
+      cover_image: resolveSupplierImageUrl(sc.cover_image)
+    }));
+
+    category.cover_image = resolveSupplierImageUrl(category.cover_image);
 
     res.json({
       success: true,
       data: {
         category,
         subcategories,
-        products
+        products: sanitizedProducts
       }
     });
   } catch (err) {
@@ -164,9 +173,14 @@ storeRouter.get('/products', async (req, res) => {
       offset: parseInt(offset || '0', 10)
     });
 
+    const sanitizedProducts = products.map(p => ({
+      ...p,
+      images: (p.images || []).map(resolveSupplierImageUrl).filter(Boolean)
+    }));
+
     res.json({
       success: true,
-      data: products
+      data: sanitizedProducts
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -187,6 +201,8 @@ storeRouter.get('/products/:slug', async (req, res) => {
         error: { code: 'PRODUCT_NOT_FOUND', message: 'Product not found.' }
       });
     }
+
+    product.images = (product.images || []).map(resolveSupplierImageUrl).filter(Boolean);
 
     res.json({
       success: true,

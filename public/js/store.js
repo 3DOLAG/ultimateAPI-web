@@ -391,6 +391,17 @@ const StoreApp = {
     }
   },
 
+  resolveImageUrl(img) {
+    if (!img || typeof img !== 'string') return 'https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=600&q=80';
+    img = img.trim();
+    if (!img) return 'https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=600&q=80';
+    if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('data:')) {
+      return img;
+    }
+    const leadingSlash = img.startsWith('/') ? '' : '/';
+    return `https://utimate-eg.com${leadingSlash}${img}`;
+  },
+
   renderProductsGrid(products, gridId) {
     const grid = document.getElementById(gridId);
     if (!grid) return;
@@ -401,14 +412,15 @@ const StoreApp = {
     }
 
     grid.innerHTML = products.map(p => {
-      const imgUrl = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=600&q=80';
+      const rawImg = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : (p.image || p.cover_image || p.thumbnail);
+      const imgUrl = this.resolveImageUrl(rawImg);
       const inStock = p.is_available !== false;
       const currency = p.currency || 'EGP';
 
       return `
         <div class="product-card" onclick="StoreApp.navigate('/product/${p.slug || p.id}')">
           <div class="product-img-wrap">
-            <img src="${imgUrl}" alt="${p.name}" class="product-img" loading="lazy">
+            <img src="${imgUrl}" alt="${p.name}" class="product-img" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=600&q=80';">
             <span class="badge ${inStock ? 'badge-success' : 'badge-danger'}" style="position: absolute; top: 10px; right: 10px;">
               ${inStock ? 'متوفر' : 'غير متوفر'}
             </span>
@@ -500,8 +512,10 @@ const StoreApp = {
         this.updateDocumentTitle(p.name_ar || p.name);
 
         const imgEl = document.getElementById('productDetailImg');
-        const imgUrl = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=800&q=80';
+        const rawImg = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : (p.image || p.cover_image || p.thumbnail);
+        const imgUrl = this.resolveImageUrl(rawImg);
         imgEl.src = imgUrl;
+        imgEl.onerror = () => { imgEl.src = 'https://images.unsplash.com/photo-1612287233261-26c71c4c1a2f?w=800&q=80'; };
 
         document.getElementById('productDetailCat').textContent = p.category_id || 'ألعاب واشتراكات';
         document.getElementById('productDetailTitle').textContent = p.name_ar || p.name;
