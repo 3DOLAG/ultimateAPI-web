@@ -153,6 +153,22 @@ const StoreApp = {
         this.state.storeInfo = json.data;
         document.querySelectorAll('.store-name-text').forEach(el => el.textContent = json.data.name);
 
+        // Dynamic Theme Colors Application
+        if (json.data.theme) {
+          const t = json.data.theme;
+          const root = document.documentElement;
+          if (t.primary) {
+            root.style.setProperty('--accent-primary', t.primary);
+            root.style.setProperty('--accent-hover', t.hover);
+            root.style.setProperty('--accent-light', t.accent);
+            root.style.setProperty('--accent-subtle', t.subtle);
+            root.style.setProperty('--border-accent', t.border);
+            root.style.setProperty('--shadow-glow', `0 0 24px -2px ${t.shadow}`);
+          }
+          if (t.bgPrimary) root.style.setProperty('--bg-primary', t.bgPrimary);
+          if (t.bgSurface) root.style.setProperty('--bg-surface', t.bgSurface);
+        }
+
         // Store Logo Image & Favicon Dynamic Update
         if (json.data.logo_url && json.data.logo_url.trim()) {
           document.querySelectorAll('.brand-mark').forEach(el => el.style.display = 'none');

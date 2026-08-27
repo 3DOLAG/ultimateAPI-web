@@ -18,7 +18,14 @@ export const config = {
     whatsapp: process.env.SUPPORT_WHATSAPP || '+201001234567',
     discord: process.env.SUPPORT_DISCORD || 'https://discord.gg/aurastore',
     tiktok: process.env.SUPPORT_TIKTOK || 'https://tiktok.com/@aurastore',
-    logoUrl: process.env.RESELLER_LOGO_URL || ''
+    logoUrl: process.env.RESELLER_LOGO_URL || '',
+    // Dynamic Theme Customization
+    themePreset: (process.env.THEME_PRESET || 'indigo').toLowerCase().trim(),
+    themePrimaryColor: (process.env.THEME_PRIMARY_COLOR || '').trim(),
+    themePrimaryHover: (process.env.THEME_PRIMARY_HOVER || '').trim(),
+    themeAccentColor: (process.env.THEME_ACCENT_COLOR || '').trim(),
+    themeBgColor: (process.env.THEME_BG_COLOR || '').trim(),
+    themeSurfaceColor: (process.env.THEME_SURFACE_COLOR || '').trim()
   },
   admin: {
     apiKey: process.env.ADMIN_API_KEY || '',

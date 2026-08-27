@@ -2,8 +2,18 @@ import express from 'express';
 import { dbHelper } from '../db.js';
 import { stockValidator } from '../services/stockValidator.js';
 import { config } from '../config.js';
+import { generateDynamicCss, resolveTheme } from '../services/themeEngine.js';
 
 export const storeRouter = express.Router();
+
+/**
+ * GET /api/theme.css & /theme.css
+ */
+storeRouter.get(['/theme.css', '/theme/style.css'], (req, res) => {
+  res.setHeader('Content-Type', 'text/css');
+  res.setHeader('Cache-Control', 'public, max-age=60');
+  res.send(generateDynamicCss(config.store));
+});
 
 /**
  * GET /api/store/info & /api/info
@@ -20,7 +30,8 @@ storeRouter.get(['/info', '/store/info'], (req, res) => {
       currency_symbol: settings.currency_symbol || config.store.currencySymbol,
       support_whatsapp: settings.support_whatsapp || config.store.whatsapp,
       support_discord: settings.support_discord || config.store.discord,
-      support_tiktok: settings.support_tiktok || config.store.tiktok
+      support_tiktok: settings.support_tiktok || config.store.tiktok,
+      theme: resolveTheme(config.store)
     }
   });
 });
