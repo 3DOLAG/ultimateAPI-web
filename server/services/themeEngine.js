@@ -94,7 +94,10 @@ export function resolveTheme(storeConfig = {}) {
 
 export function generateDynamicCss(storeConfig = {}) {
   const theme = resolveTheme(storeConfig);
-  return `/* Dynamic Reseller Store Theme (Configured via .env) */
+  const bgPrimary = theme.bgPrimary || '';
+  const bgSurface = theme.bgSurface || '';
+
+  return `/* Dynamic Reseller Store Theme (Configured via .env & Dashboard) */
 :root {
   --accent-primary: ${theme.primary};
   --accent-hover: ${theme.hover};
@@ -102,8 +105,66 @@ export function generateDynamicCss(storeConfig = {}) {
   --accent-subtle: ${theme.subtle};
   --border-accent: ${theme.border};
   --shadow-glow: 0 0 24px -2px ${theme.shadow};
-  ${theme.bgPrimary ? `--bg-primary: ${theme.bgPrimary};` : ''}
-  ${theme.bgSurface ? `--bg-surface: ${theme.bgSurface};` : ''}
+  ${bgPrimary ? `--bg-primary: ${bgPrimary};` : ''}
+  ${bgSurface ? `--bg-surface: ${bgSurface};` : ''}
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 30%, ${theme.accent} 75%, ${theme.hover} 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.nav-link:hover, .nav-link.active, .drawer-nav-item:hover, .drawer-nav-item.active {
+  color: #ffffff !important;
+  background: ${theme.subtle} !important;
+  border: 1px solid ${theme.border} !important;
+}
+
+.badge-primary, .hero-badge {
+  background: ${theme.subtle} !important;
+  color: ${theme.accent} !important;
+  border-color: ${theme.border} !important;
+}
+
+.cat-pill:hover, .cat-pill.active {
+  background: ${theme.primary} !important;
+  border-color: ${theme.hover} !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 16px -2px ${theme.shadow} !important;
+}
+
+.btn-primary {
+  background: ${theme.primary} !important;
+  border-color: ${theme.hover} !important;
+  box-shadow: 0 2px 10px ${theme.shadow} !important;
+}
+
+.btn-primary:hover {
+  background: ${theme.hover} !important;
+  box-shadow: 0 4px 16px ${theme.shadow} !important;
+}
+
+.brand-mark {
+  background: linear-gradient(135deg, ${theme.primary}, ${theme.hover}) !important;
+  box-shadow: 0 0 16px ${theme.shadow} !important;
+}
+
+.header-admin-btn:hover {
+  border-color: ${theme.primary} !important;
+  color: ${theme.accent} !important;
+  box-shadow: 0 0 14px ${theme.shadow} !important;
+}
+
+.step-card {
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.step-card:hover {
+  border-color: ${theme.border} !important;
+  box-shadow: 0 8px 24px -4px ${theme.shadow} !important;
+  transform: translateY(-3px) !important;
 }
 `;
 }

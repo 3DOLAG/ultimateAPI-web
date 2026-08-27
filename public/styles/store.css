@@ -99,8 +99,9 @@
 }
 
 .nav-link:hover, .nav-link.active {
-  color: var(--text-primary);
-  background: var(--bg-surface-elevated);
+  color: #ffffff;
+  background: var(--accent-subtle);
+  border: 1px solid var(--border-accent);
 }
 
 /* Category Dropdown (Desktop) */
@@ -325,8 +326,9 @@
 }
 
 .drawer-nav-item:hover, .drawer-nav-item.active {
-  background: var(--bg-surface-elevated);
-  color: var(--accent-light);
+  background: var(--accent-subtle);
+  color: #ffffff;
+  border: 1px solid var(--border-accent);
 }
 
 .drawer-divider {
