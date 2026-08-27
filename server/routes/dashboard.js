@@ -368,6 +368,33 @@ dashboardRouter.delete('/payment-methods/:id', requirePermission('manage_payment
   }
 });
 
+dashboardRouter.post('/payment-methods/:id/toggle', requirePermission('manage_payment_methods'), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const methods = dbHelper.getPaymentMethods(false);
+    const target = methods.find(m => m.id === id);
+    if (!target) {
+      return res.status(404).json({ success: false, error: { message: 'Payment method not found.' } });
+    }
+
+    const newActive = target.is_active ? 0 : 1;
+    dbHelper.upsertPaymentMethod({ ...target, is_active: newActive });
+
+    const allMethods = dbHelper.getPaymentMethods(false);
+    try {
+      await blobService.savePaymentMethods(allMethods);
+    } catch { }
+
+    res.json({
+      success: true,
+      data: { id, is_active: Boolean(newActive) },
+      message: newActive ? `تم إظهار وتفعيل طريقة الدفع "${target.name_ar || target.name}" في المتجر بنجاح 👁️` : `تم إخفاء وتعطيل طريقة الدفع "${target.name_ar || target.name}" من المتجر بنجاح 👁️‍🗨️`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 /**
  * User Management
  */

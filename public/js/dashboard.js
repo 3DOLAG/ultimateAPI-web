@@ -488,23 +488,34 @@ const DashboardApp = {
 
       if (json.success && Array.isArray(json.data)) {
         this.state.paymentMethods = json.data;
-        tbody.innerHTML = json.data.map(pm => `
-          <tr>
-            <td><strong>${pm.name}</strong> ${pm.name_ar ? `(${pm.name_ar})` : ''}</td>
-            <td><span class="badge badge-primary">${pm.type}</span></td>
-            <td><span style="font-family: var(--font-mono);">${pm.account_number}</span></td>
-            <td><span class="badge ${pm.is_active ? 'badge-success' : 'badge-neutral'}">${pm.is_active ? 'Active' : 'Disabled'}</span></td>
-            <td>
-              <div style="display: flex; gap: 6px;">
-                <button class="btn btn-secondary btn-sm" onclick="DashboardApp.editPaymentMethod('${pm.id}')">✏️ تعديل</button>
-                <button class="btn btn-danger btn-sm" onclick="DashboardApp.deletePaymentMethod('${pm.id}')">🗑️ حذف</button>
-              </div>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = json.data.map(pm => {
+          const isActive = pm.is_active !== 0 && pm.is_active !== false;
+          return `
+            <tr style="${!isActive ? 'opacity: 0.65; background: rgba(239, 68, 68, 0.04);' : ''}">
+              <td><strong>${pm.name}</strong> ${pm.name_ar ? `(${pm.name_ar})` : ''}</td>
+              <td><span class="badge badge-primary">${pm.type}</span></td>
+              <td><span style="font-family: var(--font-mono);">${pm.account_number}</span></td>
+              <td>
+                ${isActive 
+                  ? `<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 4px;">👁️ مفعّلة ومعروضة</span>` 
+                  : `<span class="badge badge-danger" style="display: inline-flex; align-items: center; gap: 4px;">🚫 معطلة ومخفية</span>`
+                }
+              </td>
+              <td>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <button class="btn btn-sm ${isActive ? 'btn-danger' : 'btn-success'}" onclick="DashboardApp.togglePaymentMethodStatus('${pm.id}')" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; font-size: 0.78rem;">
+                    ${isActive ? '👁️‍🗨️ إخفاء / تعطيل' : '👁️ إظهار / تفعيل'}
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="DashboardApp.editPaymentMethod('${pm.id}')" style="padding: 5px 10px; font-size: 0.78rem;">✏️ تعديل</button>
+                  <button class="btn btn-danger btn-sm" onclick="DashboardApp.deletePaymentMethod('${pm.id}')" style="padding: 5px 10px; font-size: 0.78rem;">🗑️ حذف</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
       }
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="5">Failed to load methods.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5">فشل تحميل طرق الدفع.</td></tr>`;
     }
   },
 
@@ -515,6 +526,8 @@ const DashboardApp = {
     document.getElementById('pmType').value = 'INSTAPAY';
     document.getElementById('pmAccount').value = '';
     document.getElementById('pmInstructionsAr').value = '';
+    const activeCb = document.getElementById('pmIsActive');
+    if (activeCb) activeCb.checked = true;
     document.getElementById('paymentMethodModal').classList.add('open');
   },
 
@@ -528,6 +541,8 @@ const DashboardApp = {
     document.getElementById('pmType').value = pm.type || 'INSTAPAY';
     document.getElementById('pmAccount').value = pm.account_number || '';
     document.getElementById('pmInstructionsAr').value = pm.instructions_ar || '';
+    const activeCb = document.getElementById('pmIsActive');
+    if (activeCb) activeCb.checked = pm.is_active !== 0 && pm.is_active !== false;
     document.getElementById('paymentMethodModal').classList.add('open');
   },
 
@@ -538,13 +553,15 @@ const DashboardApp = {
   async savePaymentMethod(e) {
     e.preventDefault();
     const editId = document.getElementById('pmEditId').value.trim();
+    const isActive = document.getElementById('pmIsActive') ? (document.getElementById('pmIsActive').checked ? 1 : 0) : 1;
     const payload = {
       id: editId || undefined,
       name: document.getElementById('pmName').value.trim(),
       name_ar: document.getElementById('pmNameAr').value.trim(),
       type: document.getElementById('pmType').value,
       account_number: document.getElementById('pmAccount').value.trim(),
-      instructions_ar: document.getElementById('pmInstructionsAr').value.trim()
+      instructions_ar: document.getElementById('pmInstructionsAr').value.trim(),
+      is_active: isActive
     };
 
     try {
@@ -561,6 +578,24 @@ const DashboardApp = {
       } else {
         const msg = (typeof json.error === 'object' ? json.error?.message : json.error) || 'فشل حفظ طريقة الدفع';
         this.showToast(msg, 'error');
+      }
+    } catch (err) {
+      this.showToast(`خطأ: ${err.message}`, 'error');
+    }
+  },
+
+  async togglePaymentMethodStatus(id) {
+    try {
+      const res = await fetch(`/api/dashboard/payment-methods/${encodeURIComponent(id)}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const json = await res.json();
+      if (json.success) {
+        this.showToast(json.message || 'تم تحديث حالة طريقة الدفع بنجاح!', 'success');
+        this.loadPaymentMethods();
+      } else {
+        throw new Error(json.error?.message || json.error || 'فشل تحديث طريقة الدفع');
       }
     } catch (err) {
       this.showToast(`خطأ: ${err.message}`, 'error');
