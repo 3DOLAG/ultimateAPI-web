@@ -201,27 +201,63 @@ const StoreApp = {
           document.querySelectorAll('.brand-logo-img').forEach(el => el.style.display = 'none');
         }
         
-        // Support Channels (WhatsApp, Discord, TikTok)
+        // Support Channels (WhatsApp, Discord, TikTok) - Dynamic Handles & Visibility
+        // 1. WhatsApp
+        const waContainer = document.getElementById('footerSupportWhatsapp');
         const waText = document.getElementById('footerWhatsappText');
-        if (waText && json.data.support_whatsapp) waText.textContent = json.data.support_whatsapp;
-        
-        if (json.data.support_whatsapp) {
-          const cleanPhone = json.data.support_whatsapp.replace(/[^0-9]/g, '');
-          const waUrl = `https://wa.me/${cleanPhone}`;
-          ['footerSupportWhatsapp', 'drawerSupportWhatsapp', 'bottomNavWhatsapp', 'topSupportWhatsappLink', 'btnSuccessWhatsApp'].forEach(id => {
+        const isWaActive = json.data.whatsapp_enabled !== false && Boolean(json.data.support_whatsapp);
+        if (isWaActive) {
+          if (waContainer) {
+            waContainer.style.display = 'flex';
+            waContainer.href = json.data.whatsapp_url || `https://wa.me/${json.data.support_whatsapp.replace(/[^0-9]/g, '')}`;
+          }
+          if (waText) waText.textContent = json.data.support_whatsapp;
+          
+          ['drawerSupportWhatsapp', 'bottomNavWhatsapp', 'topSupportWhatsappLink', 'btnSuccessWhatsApp'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.href = waUrl;
+            if (el) {
+              el.style.display = '';
+              el.href = json.data.whatsapp_url || `https://wa.me/${json.data.support_whatsapp.replace(/[^0-9]/g, '')}`;
+            }
+          });
+        } else {
+          if (waContainer) waContainer.style.display = 'none';
+          ['drawerSupportWhatsapp', 'bottomNavWhatsapp', 'topSupportWhatsappLink', 'btnSuccessWhatsApp'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
           });
         }
 
-        const discordLink = document.getElementById('footerSupportDiscord');
-        if (discordLink && json.data.support_discord) {
-          discordLink.href = json.data.support_discord;
+        // 2. Discord
+        const discordContainer = document.getElementById('footerSupportDiscord');
+        const discordText = document.getElementById('footerDiscordText');
+        const isDiscordActive = json.data.discord_enabled !== false && Boolean(json.data.support_discord);
+        if (isDiscordActive) {
+          if (discordContainer) {
+            discordContainer.style.display = 'flex';
+            discordContainer.href = json.data.support_discord;
+          }
+          if (discordText) {
+            discordText.textContent = json.data.discord_code ? `discord.gg/${json.data.discord_code}` : 'سيرفر الدعم الرسمي';
+          }
+        } else {
+          if (discordContainer) discordContainer.style.display = 'none';
         }
 
-        const tiktokLink = document.getElementById('footerSupportTiktok');
-        if (tiktokLink && json.data.support_tiktok) {
-          tiktokLink.href = json.data.support_tiktok;
+        // 3. TikTok
+        const tiktokContainer = document.getElementById('footerSupportTiktok');
+        const tiktokText = document.getElementById('footerTiktokText');
+        const isTiktokActive = json.data.tiktok_enabled !== false && Boolean(json.data.support_tiktok);
+        if (isTiktokActive) {
+          if (tiktokContainer) {
+            tiktokContainer.style.display = 'flex';
+            tiktokContainer.href = json.data.support_tiktok;
+          }
+          if (tiktokText) {
+            tiktokText.textContent = json.data.tiktok_username || (json.data.support_tiktok.includes('@') ? `@${json.data.support_tiktok.split('@')[1]}` : '@tiktok');
+          }
+        } else {
+          if (tiktokContainer) tiktokContainer.style.display = 'none';
         }
       }
     } catch (e) {

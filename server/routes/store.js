@@ -62,6 +62,70 @@ storeRouter.get(['/theme.css', '/theme/style.css'], async (req, res) => {
 /**
  * GET /api/store/info & /api/info
  */
+/**
+ * Helper: parse, format, and normalize social handles and links
+ */
+export function formatSocialLinks(settings = {}) {
+  // TikTok: support username e.g. @aurastore or full URL
+  const rawTiktok = (settings.support_tiktok !== undefined ? settings.support_tiktok : config.store.tiktok) || '';
+  let tiktokUsername = '';
+  let tiktokUrl = '';
+  const isTiktokDisabled = settings.tiktok_enabled === false || settings.tiktok_enabled === 'false' || settings.tiktok_enabled === 0;
+
+  if (rawTiktok && String(rawTiktok).trim() && !isTiktokDisabled) {
+    const raw = String(rawTiktok).trim().replace(/^https?:\/\/(www\.)?tiktok\.com\/@?/i, '');
+    const cleanUser = raw.replace(/^@/, '').replace(/\/.*$/, '').trim();
+    if (cleanUser) {
+      tiktokUsername = `@${cleanUser}`;
+      tiktokUrl = `https://www.tiktok.com/@${cleanUser}`;
+    }
+  }
+
+  // Discord: support server invite code or full URL
+  const rawDiscord = (settings.support_discord !== undefined ? settings.support_discord : config.store.discord) || '';
+  let discordCode = '';
+  let discordUrl = '';
+  const isDiscordDisabled = settings.discord_enabled === false || settings.discord_enabled === 'false' || settings.discord_enabled === 0;
+
+  if (rawDiscord && String(rawDiscord).trim() && !isDiscordDisabled) {
+    const raw = String(rawDiscord).trim().replace(/^https?:\/\/(www\.)?discord\.(gg|com\/invite)\/?/i, '');
+    const cleanCode = raw.replace(/\/.*$/, '').trim();
+    if (cleanCode) {
+      discordCode = cleanCode;
+      discordUrl = `https://discord.gg/${cleanCode}`;
+    }
+  }
+
+  // WhatsApp: support phone or wa.me URL
+  const rawWhatsapp = (settings.support_whatsapp !== undefined ? settings.support_whatsapp : config.store.whatsapp) || '';
+  let whatsappPhone = '';
+  let whatsappUrl = '';
+  const isWhatsappDisabled = settings.whatsapp_enabled === false || settings.whatsapp_enabled === 'false' || settings.whatsapp_enabled === 0;
+
+  if (rawWhatsapp && String(rawWhatsapp).trim() && !isWhatsappDisabled) {
+    const cleanDigits = String(rawWhatsapp).replace(/[^0-9]/g, '');
+    if (cleanDigits) {
+      whatsappPhone = String(rawWhatsapp).trim();
+      whatsappUrl = `https://wa.me/${cleanDigits}`;
+    }
+  }
+
+  return {
+    support_tiktok: tiktokUrl,
+    tiktok_username: tiktokUsername,
+    tiktok_enabled: Boolean(tiktokUrl && !isTiktokDisabled),
+    support_discord: discordUrl,
+    discord_code: discordCode,
+    discord_enabled: Boolean(discordUrl && !isDiscordDisabled),
+    support_whatsapp: whatsappPhone,
+    whatsapp_url: whatsappUrl,
+    whatsapp_enabled: Boolean(whatsappUrl && !isWhatsappDisabled)
+  };
+}
+
+/**
+ * GET /api/store/info & /api/info
+ */
 storeRouter.get(['/info', '/store/info'], async (req, res) => {
   try {
     const settings = await getMergedSettings();
@@ -73,6 +137,9 @@ storeRouter.get(['/info', '/store/info'], async (req, res) => {
       themeBgColor: settings.theme_bg_color || config.store.themeBgColor,
       themeSurfaceColor: settings.theme_surface_color || config.store.themeSurfaceColor
     };
+
+    const socials = formatSocialLinks(settings);
+
     res.json({
       success: true,
       data: {
@@ -81,9 +148,7 @@ storeRouter.get(['/info', '/store/info'], async (req, res) => {
         logo_url: settings.logo_url || config.store.logoUrl || '',
         currency: settings.currency || config.store.currency,
         currency_symbol: settings.currency_symbol || config.store.currencySymbol,
-        support_whatsapp: settings.support_whatsapp || config.store.whatsapp,
-        support_discord: settings.support_discord || config.store.discord,
-        support_tiktok: settings.support_tiktok || config.store.tiktok,
+        ...socials,
         theme: resolveTheme(themeConfig)
       }
     });

@@ -346,31 +346,65 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label">Storefront Name</label>
+                <label class="form-label">اسم المتجر (Store Name)</label>
                 <input type="text" id="settingStoreName" class="form-input" required>
               </div>
 
               <div class="form-group">
-                <label class="form-label">Store Tagline</label>
+                <label class="form-label">وصف وشعار المتجر (Tagline)</label>
                 <input type="text" id="settingTagline" class="form-input">
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Support WhatsApp (e.g. +201001234567)</label>
-                <input type="text" id="settingSupportWhatsapp" class="form-input" required>
+              <!-- Social Channels Management Box -->
+              <div style="margin: 20px 0; padding: 16px; background: var(--bg-surface-elevated, rgba(255,255,255,0.03)); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                  <span>🌐</span> <span>حسابات وقنوات التواصل والدعم (Social Channels)</span>
+                </h4>
+
+                <!-- WhatsApp -->
+                <div style="margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                      <span style="color: #25D366;">💬</span> <span>دعم واتساب (WhatsApp)</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="checkbox" id="settingWhatsappEnabled" checked onchange="DashboardApp.toggleSocialInput('settingSupportWhatsapp', this.checked)">
+                      <span>إظهار في المتجر</span>
+                    </label>
+                  </div>
+                  <input type="text" id="settingSupportWhatsapp" class="form-input" placeholder="+201001234567 أو 01001234567">
+                </div>
+
+                <!-- Discord -->
+                <div style="margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                      <span style="color: #5865F2;">🎮</span> <span>سيرفر ديسكورد (Discord Server)</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="checkbox" id="settingDiscordEnabled" checked onchange="DashboardApp.toggleSocialInput('settingSupportDiscord', this.checked)">
+                      <span>إظهار في المتجر</span>
+                    </label>
+                  </div>
+                  <input type="text" id="settingSupportDiscord" class="form-input" placeholder="اسم السيرفر أو كود الدعوة (مثال: aurastore أو https://discord.gg/aurastore)">
+                </div>
+
+                <!-- TikTok -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                      <span style="color: #ff0050;">📱</span> <span>حساب تيك توك (TikTok Account)</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="checkbox" id="settingTiktokEnabled" checked onchange="DashboardApp.toggleSocialInput('settingSupportTiktok', this.checked)">
+                      <span>إظهار في المتجر</span>
+                    </label>
+                  </div>
+                  <input type="text" id="settingSupportTiktok" class="form-input" placeholder="اسم المستخدم (مثال: @aurastore أو aurastore)">
+                </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Support Discord Server URL</label>
-                <input type="url" id="settingSupportDiscord" class="form-input" placeholder="https://discord.gg/yourserver">
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Support TikTok Profile URL</label>
-                <input type="url" id="settingSupportTiktok" class="form-input" placeholder="https://tiktok.com/@youraccount">
-              </div>
-
-              <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">Save Settings</button>
+              <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">حفظ كافة الإعدادات (Save Settings)</button>
             </form>
           </div>
         </div>

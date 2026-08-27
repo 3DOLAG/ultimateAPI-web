@@ -911,6 +911,14 @@ const DashboardApp = {
     }
   },
 
+  toggleSocialInput(inputId, isChecked) {
+    const input = document.getElementById(inputId);
+    if (input) {
+      input.disabled = !isChecked;
+      input.style.opacity = isChecked ? '1' : '0.4';
+    }
+  },
+
   async loadSettings() {
     try {
       const res = await fetch('/api/dashboard/settings');
@@ -919,10 +927,33 @@ const DashboardApp = {
         if (document.getElementById('settingStoreName')) document.getElementById('settingStoreName').value = json.data.store_name || '';
         if (document.getElementById('settingTagline')) document.getElementById('settingTagline').value = json.data.tagline || '';
         if (document.getElementById('settingLogoUrl')) document.getElementById('settingLogoUrl').value = json.data.logo_url || '';
+        
         if (document.getElementById('settingSupportWhatsapp')) document.getElementById('settingSupportWhatsapp').value = json.data.support_whatsapp || '';
         if (document.getElementById('settingSupportDiscord')) document.getElementById('settingSupportDiscord').value = json.data.support_discord || '';
         if (document.getElementById('settingSupportTiktok')) document.getElementById('settingSupportTiktok').value = json.data.support_tiktok || '';
         
+        const waActive = json.data.whatsapp_enabled !== false && json.data.whatsapp_enabled !== 'false';
+        const discordActive = json.data.discord_enabled !== false && json.data.discord_enabled !== 'false';
+        const tiktokActive = json.data.tiktok_enabled !== false && json.data.tiktok_enabled !== 'false';
+
+        const waCb = document.getElementById('settingWhatsappEnabled');
+        if (waCb) {
+          waCb.checked = waActive;
+          this.toggleSocialInput('settingSupportWhatsapp', waActive);
+        }
+
+        const discCb = document.getElementById('settingDiscordEnabled');
+        if (discCb) {
+          discCb.checked = discordActive;
+          this.toggleSocialInput('settingSupportDiscord', discordActive);
+        }
+
+        const ttCb = document.getElementById('settingTiktokEnabled');
+        if (ttCb) {
+          ttCb.checked = tiktokActive;
+          this.toggleSocialInput('settingSupportTiktok', tiktokActive);
+        }
+
         this.updateLogoPreview(json.data.logo_url || '');
         this.applySidebarBranding(json.data);
       }
@@ -933,13 +964,20 @@ const DashboardApp = {
 
   async saveSettings(e) {
     e.preventDefault();
+    const isWaEnabled = document.getElementById('settingWhatsappEnabled') ? document.getElementById('settingWhatsappEnabled').checked : true;
+    const isDiscordEnabled = document.getElementById('settingDiscordEnabled') ? document.getElementById('settingDiscordEnabled').checked : true;
+    const isTiktokEnabled = document.getElementById('settingTiktokEnabled') ? document.getElementById('settingTiktokEnabled').checked : true;
+
     const payload = {
       store_name: document.getElementById('settingStoreName').value.trim(),
       tagline: document.getElementById('settingTagline').value.trim(),
       logo_url: document.getElementById('settingLogoUrl') ? document.getElementById('settingLogoUrl').value.trim() : '',
       support_whatsapp: document.getElementById('settingSupportWhatsapp').value.trim(),
+      whatsapp_enabled: isWaEnabled,
       support_discord: document.getElementById('settingSupportDiscord').value.trim(),
-      support_tiktok: document.getElementById('settingSupportTiktok').value.trim()
+      discord_enabled: isDiscordEnabled,
+      support_tiktok: document.getElementById('settingSupportTiktok').value.trim(),
+      tiktok_enabled: isTiktokEnabled
     };
 
     try {
@@ -950,7 +988,7 @@ const DashboardApp = {
       });
       const json = await res.json();
       if (json.success) {
-        this.showToast('تم حفظ كافة إعدادات وهيكل المتجر بنجاح', 'success');
+        this.showToast('تم حفظ كافة إعدادات وهيكل المتجر وقنوات التواصل بنجاح 🚀', 'success');
         this.applySidebarBranding(payload);
       } else {
         const msg = (typeof json.error === 'object' ? json.error?.message : json.error) || 'فشل حفظ الإعدادات';
