@@ -6,6 +6,7 @@ package-lock.json.log
 .env
 .env.local
 .env.*.local
+.env.example
 
 # Database & SQLite files
 data/*.db
