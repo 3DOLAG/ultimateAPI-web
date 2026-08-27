@@ -73,6 +73,50 @@ export const blobService = {
   },
 
   /**
+   * Save payment methods list as a JSON blob for persistent storage on Vercel
+   */
+  async savePaymentMethods(methodsArray) {
+    const token = process.env.BLOB_READ_WRITE_TOKEN || config.blob?.token;
+    if (!token) return null;
+
+    try {
+      const blob = await put('payment-methods/methods.json', JSON.stringify(methodsArray, null, 2), {
+        access: 'public',
+        contentType: 'application/json',
+        token,
+        addRandomSuffix: false,
+        allowOverwrite: true
+      });
+      console.log('[BlobService] ✅ Payment methods saved to Vercel Blob');
+      return blob;
+    } catch (err) {
+      console.error('[BlobService] ❌ Failed to save payment methods to blob:', err.message);
+      return null;
+    }
+  },
+
+  /**
+   * Load payment methods from Vercel Blob
+   */
+  async loadPaymentMethods() {
+    const token = process.env.BLOB_READ_WRITE_TOKEN || config.blob?.token;
+    if (!token) return null;
+
+    try {
+      const { blobs } = await list({ prefix: 'payment-methods/methods', token });
+      if (blobs.length > 0) {
+        const res = await fetch(blobs[0].url);
+        if (res.ok) {
+          return await res.json();
+        }
+      }
+    } catch (err) {
+      console.warn('[BlobService] ⚠️ Failed to load payment methods from blob:', err.message);
+    }
+    return null;
+  },
+
+  /**
    * Upload a file buffer to Vercel Blob with seamless local fallback
    * @param {string} originalFilename
    * @param {Buffer} buffer

@@ -226,8 +226,17 @@ dashboardRouter.post('/pricing', requirePermission('manage_pricing'), (req, res)
 /**
  * GET & POST /api/dashboard/payment-methods
  */
-dashboardRouter.get('/payment-methods', (req, res) => {
+dashboardRouter.get('/payment-methods', async (req, res) => {
   try {
+    try {
+      const blobMethods = await blobService.loadPaymentMethods();
+      if (blobMethods && Array.isArray(blobMethods) && blobMethods.length > 0) {
+        for (const m of blobMethods) {
+          dbHelper.upsertPaymentMethod(m);
+        }
+      }
+    } catch {}
+
     const methods = dbHelper.getPaymentMethods(false);
     res.json({ success: true, data: methods });
   } catch (err) {
@@ -235,7 +244,7 @@ dashboardRouter.get('/payment-methods', (req, res) => {
   }
 });
 
-dashboardRouter.post('/payment-methods', requirePermission('manage_payment_methods'), (req, res) => {
+dashboardRouter.post('/payment-methods', requirePermission('manage_payment_methods'), async (req, res) => {
   try {
     const pm = req.body;
     if (!pm.name || !pm.account_number) {
@@ -243,15 +252,25 @@ dashboardRouter.post('/payment-methods', requirePermission('manage_payment_metho
     }
 
     dbHelper.upsertPaymentMethod(pm);
+    const allMethods = dbHelper.getPaymentMethods(false);
+    try {
+      await blobService.savePaymentMethods(allMethods);
+    } catch {}
+
     res.json({ success: true, message: 'Payment method saved successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-dashboardRouter.delete('/payment-methods/:id', requirePermission('manage_payment_methods'), (req, res) => {
+dashboardRouter.delete('/payment-methods/:id', requirePermission('manage_payment_methods'), async (req, res) => {
   try {
     dbHelper.deletePaymentMethod(req.params.id);
+    const allMethods = dbHelper.getPaymentMethods(false);
+    try {
+      await blobService.savePaymentMethods(allMethods);
+    } catch {}
+
     res.json({ success: true, message: 'Payment method deleted.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

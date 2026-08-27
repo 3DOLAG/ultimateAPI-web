@@ -495,7 +495,10 @@ const DashboardApp = {
             <td><span style="font-family: var(--font-mono);">${pm.account_number}</span></td>
             <td><span class="badge ${pm.is_active ? 'badge-success' : 'badge-neutral'}">${pm.is_active ? 'Active' : 'Disabled'}</span></td>
             <td>
-              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.deletePaymentMethod('${pm.id}')">Delete</button>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-secondary btn-sm" onclick="DashboardApp.editPaymentMethod('${pm.id}')">✏️ تعديل</button>
+                <button class="btn btn-danger btn-sm" onclick="DashboardApp.deletePaymentMethod('${pm.id}')">🗑️ حذف</button>
+              </div>
             </td>
           </tr>
         `).join('');
@@ -506,6 +509,25 @@ const DashboardApp = {
   },
 
   openNewPaymentMethodModal() {
+    document.getElementById('pmEditId').value = '';
+    document.getElementById('pmName').value = '';
+    document.getElementById('pmNameAr').value = '';
+    document.getElementById('pmType').value = 'INSTAPAY';
+    document.getElementById('pmAccount').value = '';
+    document.getElementById('pmInstructionsAr').value = '';
+    document.getElementById('paymentMethodModal').classList.add('open');
+  },
+
+  editPaymentMethod(id) {
+    const pm = (this.state.paymentMethods || []).find(m => m.id === id);
+    if (!pm) return;
+
+    document.getElementById('pmEditId').value = pm.id;
+    document.getElementById('pmName').value = pm.name || '';
+    document.getElementById('pmNameAr').value = pm.name_ar || '';
+    document.getElementById('pmType').value = pm.type || 'INSTAPAY';
+    document.getElementById('pmAccount').value = pm.account_number || '';
+    document.getElementById('pmInstructionsAr').value = pm.instructions_ar || '';
     document.getElementById('paymentMethodModal').classList.add('open');
   },
 
@@ -515,7 +537,9 @@ const DashboardApp = {
 
   async savePaymentMethod(e) {
     e.preventDefault();
+    const editId = document.getElementById('pmEditId').value.trim();
     const payload = {
+      id: editId || undefined,
       name: document.getElementById('pmName').value.trim(),
       name_ar: document.getElementById('pmNameAr').value.trim(),
       type: document.getElementById('pmType').value,
@@ -531,19 +555,32 @@ const DashboardApp = {
       });
       const json = await res.json();
       if (json.success) {
-        this.showToast('Payment method saved!', 'success');
+        this.showToast('تم حفظ طريقة الدفع وتحديثها بنجاح! 💳', 'success');
         this.closePaymentMethodModal();
         this.loadPaymentMethods();
+      } else {
+        const msg = (typeof json.error === 'object' ? json.error?.message : json.error) || 'فشل حفظ طريقة الدفع';
+        this.showToast(msg, 'error');
       }
     } catch (err) {
-      this.showToast(`Error: ${err.message}`, 'error');
+      this.showToast(`خطأ: ${err.message}`, 'error');
     }
   },
 
   async deletePaymentMethod(id) {
-    if (!confirm('Delete this payment method?')) return;
-    await fetch(`/api/dashboard/payment-methods/${id}`, { method: 'DELETE' });
-    this.showToast('Payment method removed', 'info');
+    if (!confirm('هل أنت متأكد من حذف طريقة الدفع هذه؟')) return;
+    try {
+      const res = await fetch(`/api/dashboard/payment-methods/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        this.showToast('تم حذف طريقة الدفع بنجاح', 'info');
+      } else {
+        const msg = (typeof json.error === 'object' ? json.error?.message : json.error) || 'فشل الحذف';
+        this.showToast(msg, 'error');
+      }
+    } catch (err) {
+      this.showToast(`خطأ: ${err.message}`, 'error');
+    }
     this.loadPaymentMethods();
   },
 

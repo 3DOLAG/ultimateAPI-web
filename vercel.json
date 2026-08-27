@@ -3,34 +3,34 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api/index.js?__vpath=/api/$1"
     },
     {
       "source": "/theme.css",
-      "destination": "/api/index.js"
+      "destination": "/api/index.js?__vpath=/api/theme.css"
     },
     {
       "source": "/theme/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api/index.js?__vpath=/api/theme/$1"
     },
     {
       "source": "/admin",
-      "destination": "/api/index.js"
+      "destination": "/api/index.js?__vpath=/admin"
     },
     {
       "source": "/admin/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api/index.js?__vpath=/admin/$1"
     },
     {
       "source": "/dashboard",
-      "destination": "/api/index.js"
+      "destination": "/api/index.js?__vpath=/admin"
     },
     {
       "source": "/dashboard/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api/index.js?__vpath=/admin/$1"
     },
     {
-      "source": "/((?!.*\\.[\\w]+$).*)",
+      "source": "/((?!api/|styles/|js/|uploads/|favicon|.*\\.[\\w]+$).*)",
       "destination": "/api/index.js"
     }
   ]

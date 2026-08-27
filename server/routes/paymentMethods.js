@@ -1,5 +1,6 @@
 import express from 'express';
 import { dbHelper } from '../db.js';
+import { blobService } from '../services/blobService.js';
 
 export const paymentMethodsRouter = express.Router();
 
@@ -7,8 +8,17 @@ export const paymentMethodsRouter = express.Router();
  * GET /api/payment-methods
  * Returns active payment methods for customer checkout/payment screen
  */
-paymentMethodsRouter.get('/', (req, res) => {
+paymentMethodsRouter.get(['/', '/api/payment-methods'], async (req, res) => {
   try {
+    try {
+      const blobMethods = await blobService.loadPaymentMethods();
+      if (blobMethods && Array.isArray(blobMethods) && blobMethods.length > 0) {
+        for (const m of blobMethods) {
+          dbHelper.upsertPaymentMethod(m);
+        }
+      }
+    } catch {}
+
     const methods = dbHelper.getPaymentMethods(true);
     res.json({
       success: true,
