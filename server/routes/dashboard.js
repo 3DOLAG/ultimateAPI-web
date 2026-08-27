@@ -1,0 +1,435 @@
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
+import multer from 'multer';
+import { requireAdmin, requirePermission, requireRole } from '../middleware/auth.js';
+import { dbHelper } from '../db.js';
+import { orderService } from '../services/orderService.js';
+import { syncEngine } from '../services/syncEngine.js';
+import { supplierApi } from '../services/supplierApi.js';
+import { config } from '../config.js';
+
+const brandingUploadDir = path.resolve(process.cwd(), 'uploads/branding');
+if (!fs.existsSync(brandingUploadDir)) {
+  fs.mkdirSync(brandingUploadDir, { recursive: true });
+}
+
+const logoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, brandingUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.png';
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `store-logo-${uniqueSuffix}${ext}`);
+  }
+});
+
+const uploadLogoMulter = multer({
+  storage: logoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|webp|svg\+xml|svg|gif/i;
+    const extName = /\.(jpe?g|png|webp|svg|gif)$/i.test(file.originalname);
+    const mimeType = allowed.test(file.mimetype);
+    if (extName || mimeType) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files (PNG, JPG, JPEG, WEBP, SVG, GIF) are allowed for logo.'));
+  }
+});
+
+export const dashboardRouter = express.Router();
+
+// Enforce Strict Admin Authorization on all Dashboard API routes
+dashboardRouter.use(requireAdmin);
+
+/**
+ * GET /api/dashboard/overview
+ */
+dashboardRouter.get('/overview', async (req, res) => {
+  try {
+    const metrics = dbHelper.getOverviewMetrics();
+    const conn = await supplierApi.checkHealth();
+    res.json({
+      success: true,
+      data: {
+        ...metrics,
+        supplierConnection: conn
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/dashboard/orders
+ */
+dashboardRouter.get('/orders', (req, res) => {
+  try {
+    const { status, payment_status, search, limit, offset } = req.query;
+    const orders = dbHelper.getOrders({
+      status: status || 'all',
+      payment_status: payment_status || 'all',
+      search: search || '',
+      limit: parseInt(limit || '50', 10),
+      offset: parseInt(offset || '0', 10)
+    });
+
+    res.json({
+      success: true,
+      data: orders
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/dashboard/orders/:id
+ */
+dashboardRouter.get('/orders/:id', (req, res) => {
+  try {
+    const order = dbHelper.getOrderById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, error: { message: 'Order not found' } });
+    }
+    res.json({ success: true, data: order });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/dashboard/orders/:id/approve-payment
+ */
+dashboardRouter.post('/orders/:id/approve-payment', requirePermission('approve_payments'), async (req, res) => {
+  try {
+    const { note } = req.body;
+    const updated = await orderService.approvePayment(req.params.id, { note });
+    res.json({
+      success: true,
+      message: 'Payment verified and approved. Order status updated to Paid.',
+      data: updated
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/dashboard/orders/:id/reject-payment
+ */
+dashboardRouter.post('/orders/:id/reject-payment', requirePermission('approve_payments'), async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const updated = await orderService.rejectPayment(req.params.id, { reason });
+    res.json({
+      success: true,
+      message: 'Payment proof rejected. Customer notified to upload another proof.',
+      data: updated
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/dashboard/orders/:id/retry-discord-webhook
+ */
+dashboardRouter.post('/orders/:id/retry-discord-webhook', requirePermission('approve_payments'), async (req, res) => {
+  try {
+    const order = dbHelper.getOrderById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, error: { message: 'Order not found' } });
+    }
+
+    const eventId = `evt_ORD_${order.reseller_order_id}_PAYMENT_PROOF_RETRY_${Date.now()}`;
+    const webhookUrl = config.discordWebhookUrl;
+
+    if (!webhookUrl || webhookUrl.trim() === '') {
+      dbHelper.updateDiscordWebhookStatus(order.id, {
+        sent_to_discord: 1,
+        discord_event_id: eventId,
+        sent_at: new Date().toISOString(),
+        delivery_status: 'simulated'
+      });
+      return res.json({ success: true, message: 'Discord Webhook URL not configured in .env (Simulated Delivery Success).' });
+    }
+
+    const payloadJson = {
+      content: `🔄 **إعادة إرسال إشعار الطلب يدويًا من لوحة الإدارة** — طلب **#${order.reseller_order_id}**`,
+      embeds: [
+        {
+          title: `Order #${order.reseller_order_id} — Manual Delivery Retry`,
+          description: `تمت إعادة إرسال تفاصيل الطلب بنجاح بواسطة مسؤول النظام.`,
+          color: 0x10b981,
+          fields: [
+            { name: '👤 Customer', value: `${order.customer_name}\n📧 ${order.customer_email}\n📱 ${order.customer_phone}`, inline: true },
+            { name: '💳 Payment Method', value: `${order.payment_method_name || 'Manual Transfer'}\n**Status:** ${order.payment_status}`, inline: true },
+            { name: '💰 Total Amount', value: `**${Number(order.total || 0).toLocaleString()} ${order.currency || 'EGP'}**`, inline: true },
+            { name: '📦 Items', value: (order.items || []).map(it => `• ${it.quantity || 1}× ${it.item_name || it.name} (${(it.total_price || it.price || 0).toLocaleString()} ${order.currency || 'EGP'})`).join('\n') || 'N/A', inline: false }
+          ],
+          footer: { text: `AURA Store Webhook Engine • Event: ${eventId}` },
+          timestamp: new Date().toISOString()
+        }
+      ]
+    };
+
+    const resp = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payloadJson)
+    });
+
+    if (resp.ok || resp.status === 204) {
+      dbHelper.updateDiscordWebhookStatus(order.id, {
+        sent_to_discord: 1,
+        discord_event_id: eventId,
+        sent_at: new Date().toISOString(),
+        delivery_status: 'delivered'
+      });
+      return res.json({ success: true, message: 'Discord webhook successfully delivered.' });
+    } else {
+      const errText = await resp.text().catch(() => '');
+      dbHelper.updateDiscordWebhookStatus(order.id, {
+        sent_to_discord: 0,
+        discord_event_id: eventId,
+        sent_at: null,
+        delivery_status: 'failed'
+      });
+      return res.status(502).json({ success: false, error: { message: `Discord returned HTTP ${resp.status}: ${errText.slice(0, 150)}` } });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET & POST /api/dashboard/pricing (Category Margins)
+ */
+dashboardRouter.get('/pricing', (req, res) => {
+  try {
+    const margins = dbHelper.getCategoryMargins();
+    res.json({ success: true, data: margins });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.post('/pricing', requirePermission('manage_pricing'), (req, res) => {
+  try {
+    const { category_id, margin_percent, margin_fixed, is_active } = req.body;
+    if (!category_id || margin_percent === undefined) {
+      return res.status(400).json({ success: false, error: { message: 'Category ID and margin percentage are required.' } });
+    }
+
+    dbHelper.saveCategoryMargin(category_id, margin_percent, margin_fixed || 0, is_active !== false);
+
+    res.json({
+      success: true,
+      message: `Profit margin updated for category ${category_id}. All customer prices recalculated immediately.`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET & POST /api/dashboard/payment-methods
+ */
+dashboardRouter.get('/payment-methods', (req, res) => {
+  try {
+    const methods = dbHelper.getPaymentMethods(false);
+    res.json({ success: true, data: methods });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.post('/payment-methods', requirePermission('manage_payment_methods'), (req, res) => {
+  try {
+    const pm = req.body;
+    if (!pm.name || !pm.account_number) {
+      return res.status(400).json({ success: false, error: { message: 'Name and account number are required.' } });
+    }
+
+    dbHelper.upsertPaymentMethod(pm);
+    res.json({ success: true, message: 'Payment method saved successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.delete('/payment-methods/:id', requirePermission('manage_payment_methods'), (req, res) => {
+  try {
+    dbHelper.deletePaymentMethod(req.params.id);
+    res.json({ success: true, message: 'Payment method deleted.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * User Management
+ */
+dashboardRouter.get('/users', requirePermission('manage_users'), (req, res) => {
+  try {
+    const users = dbHelper.getUsers();
+    res.json({ success: true, data: users });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.post('/users', requirePermission('manage_users'), (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, error: { message: 'Name, email, and password are required.' } });
+    }
+
+    const passHash = crypto.createHash('sha256').update(password).digest('hex');
+    const newUser = dbHelper.createUser({
+      name,
+      email: email.trim().toLowerCase(),
+      password_hash: passHash,
+      role: role || 'SUPPORT',
+      permissions: ['view_orders', 'view_payments', 'approve_payments']
+    });
+
+    res.status(201).json({ success: true, data: newUser });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.patch('/users/:id', requirePermission('manage_users'), (req, res) => {
+  try {
+    const { role, status, permissions } = req.body;
+    if (role) dbHelper.updateUserRole(req.params.id, role, permissions || []);
+    if (status) dbHelper.toggleUserStatus(req.params.id, status);
+    res.json({ success: true, message: 'User updated.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Catalog Sync Controls
+ */
+dashboardRouter.post('/sync/full', requirePermission('manage_products'), async (req, res) => {
+  try {
+    const result = await syncEngine.runFullSync();
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.post('/sync/delta', requirePermission('manage_products'), async (req, res) => {
+  try {
+    const result = await syncEngine.runIncrementalSync();
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.get('/sync/logs', (req, res) => {
+  try {
+    const logs = dbHelper.getSyncLogs();
+    res.json({ success: true, data: logs });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Logs & Webhooks
+ */
+dashboardRouter.get('/webhooks', requirePermission('manage_webhooks'), (req, res) => {
+  try {
+    const webhooks = dbHelper.getWebhookLogs();
+    res.json({ success: true, data: webhooks });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.get('/logs', (req, res) => {
+  try {
+    const logs = dbHelper.getApiLogs();
+    res.json({ success: true, data: logs });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Store Settings
+ */
+dashboardRouter.get('/settings', (req, res) => {
+  try {
+    const settings = dbHelper.getStoreSettings();
+    res.json({
+      success: true,
+      data: {
+        ...settings,
+        logo_url: settings.logo_url || config.store.logoUrl || ''
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+dashboardRouter.post('/settings', requirePermission('manage_settings'), (req, res) => {
+  try {
+    dbHelper.saveStoreSettings(req.body);
+    res.json({ success: true, message: 'Settings saved.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/dashboard/upload-logo
+ * Uploads store logo image and automatically updates store_settings
+ */
+dashboardRouter.post('/upload-logo', requirePermission('manage_settings'), (req, res) => {
+  uploadLogoMulter.single('logo')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, error: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No logo image file was uploaded.' });
+    }
+
+    const logoUrl = `/uploads/branding/${req.file.filename}`;
+    dbHelper.saveStoreSettings({ logo_url: logoUrl });
+
+    res.json({
+      success: true,
+      message: 'Store logo uploaded successfully.',
+      data: { logo_url: logoUrl }
+    });
+  });
+});
+
+/**
+ * GET /api/dashboard/payment-proofs/:filename
+ * Securely streams private payment proof images ONLY to authenticated dashboard users
+ */
+dashboardRouter.get('/payment-proofs/:filename', (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(config.uploadDir, filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send('Payment proof image not found.');
+  }
+
+  res.sendFile(filePath);
+});

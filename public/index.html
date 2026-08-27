@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA — متجر البطاقات الرقمية واشتراكات الألعاب</title>
+  <meta name="description" content="متجر معتمد للبطاقات الرقمية واشتراكات الألعاب والحسابات الرسمية مع استلام فوري ودفع آمن عبر إنستاباي وفودافون كاش.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✦</text></svg>">
+
+  <!-- Core Google Fonts & Stylesheets -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/theme.css">
+  <link rel="stylesheet" href="/styles/store.css">
+  <style>
+    body { font-family: 'Cairo', 'Inter', sans-serif; }
+    [dir="rtl"] .search-icon { left: auto; right: 12px; }
+    [dir="rtl"] .search-input { padding: 9px 36px 9px 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-announcement-bar">
+    <div class="container top-bar-inner">
+      <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+        <span class="pulse-dot"></span>
+        <span style="color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">خدمة العملاء والتسليم: <strong style="color: var(--success);" id="topSupportStatus">متاح الآن</strong></span>
+      </div>
+      <div>
+        <a id="topSupportWhatsappLink" href="https://wa.me/201001234567" target="_blank" style="color: var(--text-secondary); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+          <span style="color: #25D366;">💬</span> <span class="top-wa-text">واتساب</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Site Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="header-brand-group">
+        <button id="mobileMenuBtn" class="mobile-menu-btn" onclick="StoreApp.toggleMobileDrawer(true)" aria-label="Open Menu">
+          ☰
+        </button>
+        <a href="/" onclick="event.preventDefault(); StoreApp.navigate('/');" class="brand-logo">
+          <div class="brand-mark">✦</div>
+          <img class="brand-logo-img" style="display: none;" alt="Store Logo">
+          <span class="store-name-text">AURA Store</span>
+        </a>
+      </div>
+
+      <!-- Dynamically Rendered Category Navigation Bar -->
+      <nav class="nav-links" id="mainCategoryNav">
+        <!-- Injected via JavaScript from Supplier Category Tree -->
+      </nav>
+
+      <div class="header-actions">
+        <!-- Mobile Search Button -->
+        <button id="mobileSearchBtn" class="mobile-search-btn" onclick="StoreApp.toggleMobileSearch(true)" aria-label="ابحث في المتجر">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </button>
+
+        <!-- Desktop & Mobile Search Box -->
+        <div id="headerSearchBox" class="search-box">
+          <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="globalSearchInput" class="search-input" placeholder="ابحث عن منتج أو لعبة...">
+          <button id="mobileSearchCloseBtn" class="mobile-search-close-btn" onclick="StoreApp.toggleMobileSearch(false)" aria-label="إغلاق البحث">✕</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Overlay & Slide-out Menu -->
+  <div id="mobileDrawerOverlay" class="mobile-drawer-overlay" onclick="StoreApp.toggleMobileDrawer(false)"></div>
+  <aside id="mobileNavDrawer" class="mobile-drawer">
+    <div class="drawer-header">
+      <div class="brand-logo">
+        <div class="brand-mark">✦</div>
+        <img class="brand-logo-img" style="display: none;" alt="Store Logo">
+        <span class="store-name-text">AURA Store</span>
+      </div>
+      <button class="drawer-close-btn" onclick="StoreApp.toggleMobileDrawer(false)" aria-label="Close Menu">✕</button>
+    </div>
+    <div class="drawer-body" id="mobileDrawerNav">
+      <!-- Injected dynamically via JS -->
+    </div>
+    <div class="drawer-footer">
+      <a id="drawerSupportWhatsapp" href="https://wa.me/201001234567" target="_blank" class="btn btn-success btn-block btn-sm" style="margin-bottom: 8px;">
+        <span>💬</span> <span>دعم واتساب الفوري</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 1: HOMEPAGE (/) -->
+  <!-- ========================================================= -->
+  <main id="view-home" class="page-view">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-badge">
+          <span>⚡</span>
+          <span>تسليم رقمي فوري وموثوق 100%</span>
+        </div>
+        <h1 class="hero-title text-gradient">
+          متجرك الأول للألعاب والاشتراكات الرقمية
+        </h1>
+        <p class="hero-subtitle">
+          اشتراكات بلايستيشن، إكس بوكس، بطاقات ستيم، ديسكورد نيترو وأحدث الألعاب الأصلية بأفضل الأسعار مع دفع فوري عبر إنستاباي وفودافون كاش.
+        </p>
+
+        <!-- Category Shortcuts -->
+        <div class="category-pills" id="homeCategoryPills" style="justify-content: center; margin-bottom: 40px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Products Catalog Section -->
+    <section class="container" style="padding-bottom: 60px;">
+      <div class="catalog-toolbar">
+        <div>
+          <h2 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 4px;">المنتجات والاشتراكات المتاحة</h2>
+          <p style="color: var(--text-secondary); font-size: 0.875rem;">اختر المنتج لمعاينة تفاصيل الباقات والأسعار والشراء الفوري.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <select id="homeSortSelect" class="form-input" style="width: auto; padding: 6px 14px; font-size: 0.84rem;">
+            <option value="newest">الأحدث أولاً</option>
+            <option value="price_asc">السعر: من الأقل للأعلى</option>
+            <option value="price_desc">السعر: من الأعلى للأقل</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid" id="homeProductsGrid">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section style="background: var(--bg-surface); padding: 60px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+      <div class="container">
+        <div style="text-align: center; max-width: 600px; margin: 0 auto 40px;">
+          <span class="badge badge-primary" style="margin-bottom: 10px;">خطوات بسيطة وسريعة</span>
+          <h2 style="font-size: 1.6rem; font-weight: 800;">كيف تتم عملية الشراء؟</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
+          <div style="background: var(--bg-surface-elevated); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 1.8rem; margin-bottom: 12px;">🎮</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">1. اختر المنتج والنوع</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem;">تصفح المنتجات واختر الباقة أو المدة التي تناسبك.</p>
+          </div>
+
+          <div style="background: var(--bg-surface-elevated); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 1.8rem; margin-bottom: 12px;">💸</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">2. حوّل عبر إنستاباي أو المحفظة</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem;">انسخ بيانات الحساب وقم بالتحويل بالقيمة المحددة بدقة.</p>
+          </div>
+
+          <div style="background: var(--bg-surface-elevated); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 1.8rem; margin-bottom: 12px;">📸</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">3. ارفع إيصال التحويل</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem;">ارفع لقطة شاشة للإيصال لتأكيد طلبك فورا.</p>
+          </div>
+
+          <div style="background: var(--bg-surface-elevated); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 1.8rem; margin-bottom: 12px;">⚡</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">4. استلم طلبك مباشرة</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem;">يتم مراجعة إشعار الدفع وإرسال الكود أو الحساب مباشرة عبر واتساب.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why Choose Us Section -->
+    <section style="padding: 60px 0;">
+      <div class="container">
+        <div style="text-align: center; max-width: 600px; margin: 0 auto 40px;">
+          <span class="badge badge-primary" style="margin-bottom: 10px;">ضمان وموثوقية 100%</span>
+          <h2 style="font-size: 1.6rem; font-weight: 800;">لماذا تختار متجر AURA؟</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+          <div style="background: var(--bg-surface); padding: 26px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 2rem; margin-bottom: 12px;">⚡</div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 8px;">تسليم فوري ومباشر</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6;">أنظمتنا مرتبطة مباشرة ومؤتمتة لتسليم أكواد وتفعيلات الاشتراكات فور مراجعة التحويل.</p>
+          </div>
+
+          <div style="background: var(--bg-surface); padding: 26px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 2rem; margin-bottom: 12px;">🛡️</div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 8px;">ضمان رسمي وتفعيل قانوني</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6;">جميع البطاقات والحسابات والاشتراكات أصلية 100% مع ضمان كامل طوال فترة الاشتراك.</p>
+          </div>
+
+          <div style="background: var(--bg-surface); padding: 26px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 2rem; margin-bottom: 12px;">💬</div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 8px;">دعم فني متواصل 24/7</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6;">فريق دعم فني متواجد عبر واتساب وديسكورد للرد على استفساراتك ومساعدتك في التفعيل.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 2: CATEGORY PAGE (/category/{slug}) -->
+  <!-- ========================================================= -->
+  <main id="view-category" class="page-view" style="display: none;">
+    <div class="container" style="padding: 40px 20px 60px;">
+      <div style="margin-bottom: 30px;">
+        <a href="/" onclick="event.preventDefault(); StoreApp.navigate('/');" style="color: var(--text-tertiary); font-size: 0.875rem;">← العودة للرئيسية</a>
+        <h1 id="categoryPageTitle" style="font-size: 2rem; font-weight: 800; margin-top: 10px;">اسم القسم</h1>
+        <p id="categoryPageDesc" style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 6px;"></p>
+        <div id="categorySubcategoriesChips" class="category-pills" style="margin-top: 18px;"></div>
+      </div>
+
+      <div class="products-grid" id="categoryProductsGrid"></div>
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 3: PRODUCT DETAILS & VARIANT PICKER (/product/{slug}) -->
+  <!-- ========================================================= -->
+  <main id="view-product" class="page-view" style="display: none;">
+    <div class="container" style="padding: 30px 20px 60px;">
+      <a href="/" onclick="event.preventDefault(); StoreApp.navigate('/');" style="color: var(--text-tertiary); font-size: 0.875rem;">← العودة لتصفح المنتجات</a>
+
+      <div class="product-detail-layout">
+        <!-- Product Image / Gallery -->
+        <div>
+          <div class="product-gallery-main">
+            <img id="productDetailImg" class="product-gallery-img" src="" alt="Product Cover">
+          </div>
+        </div>
+
+        <!-- Product Purchase Information & Variant Selection -->
+        <div>
+          <div id="productDetailCat" class="badge badge-primary" style="margin-bottom: 8px;">قسم الألعاب</div>
+          <h1 id="productDetailTitle" style="font-size: 1.85rem; font-weight: 800; margin-bottom: 12px;">اسم المنتج</h1>
+          
+          <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px;">
+            <span id="productDetailPrice" style="font-size: 1.9rem; font-weight: 900; color: var(--accent-light);">0 EGP</span>
+            <span id="productDetailStockBadge" class="badge badge-success">متوفر في المخزون</span>
+          </div>
+
+          <div style="background: var(--bg-surface); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 24px;">
+            <div style="font-size: 0.813rem; font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px;">تفاصيل المنتج:</div>
+            <p id="productDetailDesc" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;"></p>
+          </div>
+
+          <!-- Variant / Item Selection Matrix -->
+          <div class="variant-selection-group">
+            <div class="variant-label-title">اختر الباقة / النوع المطلوب:</div>
+            <div class="variant-grid" id="productVariantsGrid">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Product Required Customer Activation Fields (UID, Email, Password, etc.) -->
+          <div id="productDynamicFieldsSection" style="margin-top: 20px; display: none; background: rgba(99, 102, 241, 0.05); border: 1px solid var(--border-accent); border-radius: var(--radius-sm); padding: 16px;">
+            <div style="font-size: 0.88rem; font-weight: 800; color: var(--accent-light); margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+              <span>🎮</span> <span>بيانات التفعيل والتسليم المطلوبة:</span>
+            </div>
+            <div style="font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 12px;">
+              يرجى إدخال البيانات المطلوبة أدناه لتنفيذ الشحن أو التفعيل فور إتمام الدفع.
+            </div>
+            <div id="productDynamicFieldsList" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Rendered dynamically based on product / variant -->
+            </div>
+          </div>
+
+          <button id="btnProceedToCheckout" class="btn btn-primary btn-lg btn-block" style="margin-top: 24px;" onclick="StoreApp.proceedToCheckoutFromProduct()">
+            متابعة للدفع والشراء الفوري ←
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 4: CHECKOUT (/checkout) -->
+  <!-- ========================================================= -->
+  <main id="view-checkout" class="page-view" style="display: none;">
+    <div class="container" style="max-width: 680px; padding: 40px 20px 60px;">
+      <h1 style="font-size: 1.7rem; font-weight: 800; margin-bottom: 8px;">تأكيد بيانات الطلب</h1>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px;">يرجى إدخال بياناتك لتجهيز الطلب والانتقال لصفحة الدفع.</p>
+
+      <!-- Order Item Summary Card -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px;">
+        <div style="font-size: 0.813rem; font-weight: 700; color: var(--text-tertiary); margin-bottom: 12px;">العنصر المحدد:</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 id="checkoutItemName" style="font-size: 1.1rem; font-weight: 700;">اسم المنتج</h3>
+            <div id="checkoutItemVariant" style="font-size: 0.84rem; color: var(--accent-light); margin-top: 2px;">الباقة المختارة</div>
+          </div>
+          <div id="checkoutItemPrice" style="font-size: 1.3rem; font-weight: 800;">0 EGP</div>
+        </div>
+      </div>
+
+      <!-- Customer Details Form -->
+      <form id="checkoutForm" onsubmit="StoreApp.submitCheckout(event)">
+        <div class="form-group">
+          <label class="form-label">الاسم بالكامل *</label>
+          <input type="text" id="checkoutCustName" class="form-input" placeholder="مثال: أحمد محمد" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">رقم الهاتف / الواتساب * (لاستلام بيانات الطلب)</label>
+          <input type="tel" id="checkoutCustPhone" class="form-input" placeholder="مثال: 01012345678" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">البريد الإلكتروني *</label>
+          <input type="email" id="checkoutCustEmail" class="form-input" placeholder="name@example.com" required>
+        </div>
+
+        <!-- Dynamic Product Activation / Player Data Fields -->
+        <div id="checkoutDynamicFieldsSection" style="margin: 22px 0; display: none; background: rgba(99, 102, 241, 0.05); border: 1px solid var(--border-accent); border-radius: var(--radius-md); padding: 18px;">
+          <div style="font-size: 0.92rem; font-weight: 800; color: var(--accent-light); margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+            <span>🎮</span> <span>بيانات التفعيل والتسليم للمنتج المطلوبة:</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 14px;">
+            يرجى تزويدنا بالبيانات التالية لتسليم شحنتك أو هديتك وتفعيلها بدقة وبأسرع وقت.
+          </div>
+          <div id="checkoutDynamicFieldsList" style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Injected dynamically via JS based on product/variant type -->
+          </div>
+        </div>
+
+        <!-- Order Notes -->
+        <div class="form-group" style="margin-top: 18px;">
+          <label class="form-label">ملاحظات أو تعليمات إضافية (اختياري)</label>
+          <textarea id="checkoutCustNotes" class="form-input" rows="2" placeholder="أي تعليمات أو ملاحظات إضافية ترغب في إضافتها بخصوص طلبك..."></textarea>
+        </div>
+
+        <button type="submit" id="btnConfirmOrder" class="btn btn-primary btn-lg btn-block" style="margin-top: 24px;">
+          تأكيد الطلب والانتقال للدفع 💳
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 5: PAYMENT & PROOF UPLOAD (/payment/{order_id}) -->
+  <!-- ========================================================= -->
+  <main id="view-payment" class="page-view" style="display: none;">
+    <div class="container" style="max-width: 720px; padding: 40px 20px 60px;">
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-accent); border-radius: var(--radius-md); padding: 24px; margin-bottom: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div>
+            <span class="badge badge-warning" id="payOrderStatusBadge">في انتظار إرفاق إشعار الدفع</span>
+            <h1 style="font-size: 1.4rem; font-weight: 800; margin-top: 6px;">طلب رقم: <span id="payOrderIdText" style="color: var(--accent-light); font-family: var(--font-mono);">RSL-00000</span></h1>
+          </div>
+          <div style="text-align: left;">
+            <div style="font-size: 0.78rem; color: var(--text-tertiary);">المبلغ المطلوب تحويله:</div>
+            <div id="payOrderTotalText" style="font-size: 1.6rem; font-weight: 900; color: var(--success);">0 EGP</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 12px;">1. اختر وسيلة الدفع المفضلة:</h2>
+      <div class="payment-grid" id="paymentMethodsList">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+      <!-- Payment Destination & Copy Box -->
+      <div id="selectedMethodDetailsBox" style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 20px; margin: 24px 0;">
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 4px;" id="pmSelectedName">إنستاباي (InstaPay)</h3>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);" id="pmSelectedInstructions"></p>
+
+        <div class="copy-box">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-tertiary); font-weight: 700;">رقم الحساب / العنوان للتحويل:</div>
+            <div class="copy-val" id="pmSelectedAccount">aurastore@instapay</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="StoreApp.copyPaymentAccount()">نسخ 📋</button>
+        </div>
+      </div>
+
+      <!-- Upload Transfer Receipt Proof -->
+      <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 12px;">2. ارفع صورة إيصال التحويل (Screenshot):</h2>
+      <form id="paymentProofForm" onsubmit="StoreApp.submitPaymentProof(event)">
+        <div id="dropZoneElement" class="upload-zone" onclick="document.getElementById('proofFileInput').click()">
+          <input type="file" id="proofFileInput" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;" onchange="StoreApp.handleProofFileSelect(event)">
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">📸</div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">اضغط هنا لرفع صورة الإيصال أو اسحب الصورة هنا</div>
+          <div style="font-size: 0.813rem; color: var(--text-tertiary);">يدعم صور JPG, PNG, WEBP (حجم أقصى 10MB)</div>
+
+          <div id="proofPreviewContainer" class="upload-preview-wrap" style="margin: 16px auto 0; display: none;">
+            <img id="proofPreviewImg" src="" style="width: 100%; border-radius: var(--radius-xs); display: block;" alt="Receipt Preview">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 4px 4px;">
+              <span id="proofFileNameText" style="font-size: 0.78rem; color: var(--text-secondary); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+              <button type="button" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.72rem;" onclick="event.stopPropagation(); StoreApp.removeSelectedProofFile();">
+                إلغاء وتغيير الصورة ✕
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.76rem; color: var(--text-tertiary); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+          <span>🔒</span> <span>يتم إرسال إشعار الدفع مباشرة لقناة الإدارة بمجرد الرفع دون حفظ صورك بشكل دائم على الموقع.</span>
+        </div>
+
+        <div class="form-group" style="margin-top: 18px;">
+          <label class="form-label">رقم المرجع / ملاحظة التحويل (اختياري)</label>
+          <input type="text" id="proofReferenceInput" class="form-input" placeholder="مثال: رقم العملية أو اسم صاحب الحساب">
+        </div>
+
+        <button type="submit" id="btnSubmitProof" class="btn btn-primary btn-lg btn-block" style="margin-top: 20px;">
+          إرسال إشعار التحويل وتأكيد الدفع 🚀
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 6: ORDER CONFIRMATION / SUCCESS (/success/{order_id}) -->
+  <!-- ========================================================= -->
+  <main id="view-success" class="page-view" style="display: none;">
+    <div class="container" style="max-width: 540px; padding: 50px 20px 70px; text-align: center;">
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 36px 24px; box-shadow: var(--shadow-lg);">
+        <div style="width: 72px; height: 72px; background: rgba(16, 185, 129, 0.15); border: 2px solid var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2.2rem; color: var(--success);">
+          ✓
+        </div>
+        <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">تم إرسال إشعار الدفع بنجاح!</h1>
+        <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 22px; line-height: 1.6;">
+          تم استلام تفاصيل وإيصال التحويل وجاري المراجعة. سيتم تسليم طلبك والتواصل معك فوراً عبر واتساب.
+        </p>
+
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 24px;">
+          <span style="color: var(--text-tertiary); font-size: 0.82rem; display: block; margin-bottom: 4px;">رقم الطلب الخاص بك:</span>
+          <strong id="successOrderIdText" style="font-size: 1.3rem; color: var(--accent-light); letter-spacing: 0.5px;">RSL-00000</strong>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <a id="btnSuccessWhatsApp" href="#" target="_blank" class="btn btn-success btn-lg btn-block" style="font-weight: 700;">
+            تواصل مع الدعم الفني عبر واتساب 💬
+          </a>
+          <button onclick="StoreApp.navigate('/')" class="btn btn-secondary btn-block">
+            العودة للمتجر 🛍️
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VIEW 7: LOGIN (/login) & REGISTER (/register) -->
+  <!-- ========================================================= -->
+  <main id="view-login" class="page-view" style="display: none;">
+    <div class="container" style="max-width: 440px; padding: 60px 20px;">
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 32px;">
+        <h1 style="font-size: 1.5rem; font-weight: 800; text-align: center; margin-bottom: 6px;">تسجيل الدخول</h1>
+        <p style="text-align: center; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 24px;">أدخل بيانات حسابك للمتابعة</p>
+
+        <form onsubmit="StoreApp.handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="name@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">كلمة المرور</label>
+            <input type="password" id="loginPass" class="form-input" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">دخول الحساب</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 0.84rem; color: var(--text-secondary);">
+          ليس لديك حساب؟ <a href="javascript:void(0)" onclick="StoreApp.navigate('/register')" style="color: var(--accent-light); font-weight: 600;">إنشاء حساب جديد</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <main id="view-register" class="page-view" style="display: none;">
+    <div class="container" style="max-width: 440px; padding: 60px 20px;">
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 32px;">
+        <h1 style="font-size: 1.5rem; font-weight: 800; text-align: center; margin-bottom: 6px;">إنشاء حساب عميل جديد</h1>
+        <p style="text-align: center; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 24px;">سجل بياناتك لمتابعة طلباتك السابقة</p>
+
+        <form onsubmit="StoreApp.handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label">الاسم الكامل</label>
+            <input type="text" id="regName" class="form-input" placeholder="مثال: محمد علي" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني</label>
+            <input type="email" id="regEmail" class="form-input" placeholder="name@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">كلمة المرور</label>
+            <input type="password" id="regPass" class="form-input" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">تسجيل الحساب</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 0.84rem; color: var(--text-secondary);">
+          لديك حساب بالفعل؟ <a href="javascript:void(0)" onclick="StoreApp.navigate('/login')" style="color: var(--accent-light); font-weight: 600;">تسجيل الدخول</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Public Site Footer (Strictly WITHOUT any Dashboard link) -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand-logo" style="margin-bottom: 12px;">
+            <div class="brand-mark">✦</div>
+            <img class="brand-logo-img" style="display: none;" alt="Store Logo">
+            <span class="store-name-text">AURA Store</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.875rem; max-width: 320px; line-height: 1.6;">
+            منصة متخصصة في توفير اشتراكات الألعاب والبطاقات الرقمية بأعلى معايير الأمان والتسليم الفوري لجميع العملاء.
+          </p>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px;">روابط سريعة</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.875rem; color: var(--text-secondary);">
+            <a href="/" onclick="event.preventDefault(); StoreApp.navigate('/');">الرئيسية</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px;">الدعم والمساعدة</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.875rem;">
+            <a id="footerSupportWhatsapp" href="https://wa.me/201001234567" target="_blank" style="display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
+              <span style="color: #25D366; font-size: 1.1rem;">💬</span>
+              <span>واتساب: <strong style="color: #25D366;" id="footerWhatsappText">+20 100 123 4567</strong></span>
+            </a>
+            <a id="footerSupportDiscord" href="https://discord.gg/aurastore" target="_blank" style="display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
+              <span style="color: #5865F2; font-size: 1.1rem;">🎮</span>
+              <span>ديسكورد: <strong style="color: #5865F2;">سيرفر الدعم الرسمي</strong></span>
+            </a>
+            <a id="footerSupportTiktok" href="https://tiktok.com/@aurastore" target="_blank" style="display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
+              <span style="color: #ff0050; font-size: 1.1rem;">📱</span>
+              <span>تيك توك: <strong style="color: #ff0050;">@aurastore</strong></span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>جميع الحقوق محفوظة © <span id="currentYear">2026</span> <span class="store-name-text">AURA Store</span></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Stack -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Floating Mobile Bottom Nav Bar (Quick Actions for Phones) -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <a href="/" onclick="event.preventDefault(); StoreApp.navigate('/');" class="mobile-nav-item" id="bottomNavHome">
+      <span class="nav-icon">🏠</span>
+      <span>الرئيسية</span>
+    </a>
+    <a href="javascript:void(0)" onclick="StoreApp.toggleMobileDrawer(true);" class="mobile-nav-item" id="bottomNavCategories">
+      <span class="nav-icon">📁</span>
+      <span>الأقسام</span>
+    </a>
+    <a id="bottomNavWhatsapp" href="https://wa.me/201001234567" target="_blank" class="mobile-nav-item">
+      <span class="nav-icon" style="color: #25D366;">💬</span>
+      <span>واتساب</span>
+    </a>
+  </nav>
+
+  <!-- Storefront JavaScript Client Application -->
+  <script src="/js/store.js"></script>
+</body>
+</html>

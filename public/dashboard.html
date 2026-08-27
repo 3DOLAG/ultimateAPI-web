@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA Control Console — Reseller Infrastructure Management</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✦</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/theme.css">
+  <link rel="stylesheet" href="/styles/dashboard.css">
+</head>
+<body>
+
+  <div class="dashboard-app">
+    <!-- Sidebar Navigation -->
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark" id="dashSidebarMark" style="background: var(--accent-primary);">✦</div>
+        <img id="dashSidebarLogoImg" class="brand-logo-img" style="display: none; max-height: 34px; max-width: 120px;" alt="Logo">
+        <div>
+          <strong id="dashSidebarStoreName" style="font-size: 0.95rem; color: var(--text-primary); display: block; line-height: 1.2;">AURA Console</strong>
+          <div style="font-size: 0.72rem; color: var(--text-tertiary);">Private Reseller Engine</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="sidebar-btn active" data-tab="pricing">
+          <span>💰</span> Category Profit Margins
+        </button>
+        <button class="sidebar-btn" data-tab="payment-methods">
+          <span>💳</span> Payment Methods
+        </button>
+        <button class="sidebar-btn" data-tab="catalog">
+          <span>📦</span> Synced Catalog & Items
+        </button>
+        <button class="sidebar-btn" data-tab="users">
+          <span>👥</span> RBAC Team & Users
+        </button>
+        <button class="sidebar-btn" data-tab="logs">
+          <span>📡</span> Webhooks & Audit Logs
+        </button>
+        <button class="sidebar-btn" data-tab="settings">
+          <span>⚙️</span> Store Settings
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div>
+          <div id="currentUserLabel" style="font-size: 0.813rem; font-weight: 600;">Admin User</div>
+          <span class="badge badge-primary" id="currentUserRoleBadge">OWNER</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="DashboardApp.logout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="dashboard-main">
+      <!-- Topbar -->
+      <header class="dashboard-topbar">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="pulse-dot"></span>
+          <span style="font-size: 0.813rem; color: var(--text-secondary);">Authoritative Supplier Gateway: <strong style="color: var(--success);" id="topSupplierHealth">Online (18ms)</strong></span>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary btn-sm" onclick="DashboardApp.triggerDeltaSync()">
+            Sync Catalog ⚡
+          </button>
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <!-- =================================================== -->
+        <!-- TAB 1: CATEGORY PROFIT MARGINS -->
+        <!-- =================================================== -->
+        <div id="tab-pricing" class="dashboard-tab-content active">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.3rem; font-weight: 700;">Category Profit Margins (Pricing Engine)</h2>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">
+              Configure profit margin % per category. When you update a margin, all products and variant items belonging to that category automatically update their customer-facing price across the entire storefront immediately.
+            </p>
+          </div>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Category Name</th>
+                  <th>Slug / ID</th>
+                  <th>Profit Margin (%)</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="pricingTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- =================================================== -->
+        <!-- TAB 4: PAYMENT METHODS -->
+        <!-- =================================================== -->
+        <div id="tab-payment-methods" class="dashboard-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.3rem; font-weight: 700;">Payment Methods Management</h2>
+              <p style="color: var(--text-secondary); font-size: 0.875rem;">Manage transfer destinations shown to customers (Vodafone Cash, InstaPay, Bank Transfer).</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="DashboardApp.openNewPaymentMethodModal()">+ Add Method</button>
+          </div>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Method Name</th>
+                  <th>Type</th>
+                  <th>Account / Number</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="paymentMethodsTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- =================================================== -->
+        <!-- TAB 5: CATALOG & SYNC -->
+        <!-- =================================================== -->
+        <div id="tab-catalog" class="dashboard-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.3rem; font-weight: 700;">Authoritative Catalog Cache</h2>
+              <p style="color: var(--text-secondary); font-size: 0.875rem;">Synchronized from Supplier API into local high-speed SQLite cache.</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="DashboardApp.triggerFullSync()">Full Catalog Sync 🔄</button>
+            </div>
+          </div>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Variants / Items</th>
+                  <th>Base Supplier Cost</th>
+                  <th>Effective Customer Price</th>
+                  <th>Stock Status</th>
+                </tr>
+              </thead>
+              <tbody id="catalogTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- =================================================== -->
+        <!-- TAB 6: RBAC USERS -->
+        <!-- =================================================== -->
+        <div id="tab-users" class="dashboard-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.3rem; font-weight: 700;">Team & Role-Based Access Control</h2>
+              <p style="color: var(--text-secondary); font-size: 0.875rem;">Manage dashboard administrators, order managers, and support agents.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="DashboardApp.openNewUserModal()">+ Add Team Member</button>
+          </div>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- =================================================== -->
+        <!-- TAB 7: LOGS & WEBHOOKS -->
+        <!-- =================================================== -->
+        <div id="tab-logs" class="dashboard-tab-content">
+          <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">API Request Audit Logs & Webhooks</h2>
+          
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Method</th>
+                  <th>Endpoint</th>
+                  <th>Status Code</th>
+                  <th>Latency</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="apiLogsTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- =================================================== -->
+        <!-- TAB 8: SETTINGS -->
+        <!-- =================================================== -->
+        <div id="tab-settings" class="dashboard-tab-content">
+          <div style="max-width: 650px;">
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">Reseller Store Branding & Contacts</h2>
+            <form onsubmit="DashboardApp.saveSettings(event)">
+
+              <!-- Store Logo Customization Card -->
+              <div style="margin-bottom: 24px; padding: 18px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                <label class="form-label" style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; display: block;">
+                  🖼️ لوجو وشعار المتجر (Store Logo)
+                </label>
+                <div style="font-size: 0.813rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5;">
+                  يتم عرض اللوجو في أعلى المتجر (Header)، القائمة الجانبية للموبايل، الفوتر، وعلامة تبويب المتصفح. يمكنك رفع ملف صورة مباشرة أو وضع رابط خارجي.
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 14px; flex-wrap: wrap;">
+                  <!-- Logo Live Preview Box -->
+                  <div id="dashLogoPreviewContainer" style="width: 72px; height: 72px; border-radius: var(--radius-sm); border: 2px dashed var(--border-medium); display: flex; align-items: center; justify-content: center; background: var(--bg-surface); overflow: hidden; flex-shrink: 0; padding: 4px;">
+                    <span id="dashLogoPlaceholderIcon" style="font-size: 2rem; color: var(--text-tertiary);">✦</span>
+                    <img id="dashLogoPreviewImg" src="" alt="Logo Preview" style="display: none; width: 100%; height: 100%; object-fit: contain;">
+                  </div>
+
+                  <!-- Upload Buttons -->
+                  <div style="flex: 1; min-width: 220px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                      <label class="btn btn-secondary btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>📁</span> <span>رفع لوجو من جهازك</span>
+                        <input type="file" id="dashLogoFileInput" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" style="display: none;" onchange="DashboardApp.handleLogoUpload(this)">
+                      </label>
+                      <button type="button" id="btnRemoveLogo" class="btn btn-danger btn-sm" style="display: none;" onclick="DashboardApp.removeLogo()">
+                        <span>🗑️</span> حذف اللوجو
+                      </button>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 6px;">
+                      يدعم صيغ: PNG, JPG, WEBP, SVG (أقصى حجم 5MB)
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.813rem;">أو أدخل رابط اللوجو مباشرة (Direct Logo URL)</label>
+                  <input type="text" id="settingLogoUrl" class="form-input" placeholder="https://example.com/logo.png أو /uploads/branding/..." oninput="DashboardApp.updateLogoPreview(this.value)">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Storefront Name</label>
+                <input type="text" id="settingStoreName" class="form-input" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Store Tagline</label>
+                <input type="text" id="settingTagline" class="form-input">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Support WhatsApp (e.g. +201001234567)</label>
+                <input type="text" id="settingSupportWhatsapp" class="form-input" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Support Discord Server URL</label>
+                <input type="url" id="settingSupportDiscord" class="form-input" placeholder="https://discord.gg/yourserver">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Support TikTok Profile URL</label>
+                <input type="url" id="settingSupportTiktok" class="form-input" placeholder="https://tiktok.com/@youraccount">
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">Save Settings</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Order Inspection & Proof Verification Modal -->
+  <div class="modal-backdrop" id="orderInspectModal">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" onclick="DashboardApp.closeInspectModal()">✕</button>
+      <div id="orderInspectModalContent"></div>
+    </div>
+  </div>
+
+  <!-- New Payment Method Modal -->
+  <div class="modal-backdrop" id="paymentMethodModal">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" onclick="DashboardApp.closePaymentMethodModal()">✕</button>
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px;">Add / Edit Payment Method</h3>
+      <form onsubmit="DashboardApp.savePaymentMethod(event)">
+        <input type="hidden" id="pmEditId">
+        <div class="form-group">
+          <label class="form-label">Method Name (English)</label>
+          <input type="text" id="pmName" class="form-input" placeholder="e.g. InstaPay" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Method Name (Arabic)</label>
+          <input type="text" id="pmNameAr" class="form-input" placeholder="مثال: إنستاباي" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type (WALLET, INSTAPAY, BANK)</label>
+          <select id="pmType" class="form-input">
+            <option value="INSTAPAY">INSTAPAY</option>
+            <option value="WALLET">MOBILE WALLET</option>
+            <option value="BANK">BANK TRANSFER</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Account Number / Phone / IPA Address *</label>
+          <input type="text" id="pmAccount" class="form-input" placeholder="010XXXXXXXX or username@instapay" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Instructions (Arabic)</label>
+          <textarea id="pmInstructionsAr" class="form-input" rows="2" placeholder="قم بالتحويل على هذا الرقم..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 14px;">Save Payment Method</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- New User Modal -->
+  <div class="modal-backdrop" id="userModal">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" onclick="DashboardApp.closeUserModal()">✕</button>
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 16px;">Add RBAC Team Member</h3>
+      <form onsubmit="DashboardApp.saveUser(event)">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="newUserName" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="newUserEmail" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="newUserPass" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select id="newUserRole" class="form-input">
+            <option value="ADMIN">ADMIN (Full management)</option>
+            <option value="ORDER_MANAGER">ORDER_MANAGER (Orders & proofs)</option>
+            <option value="PAYMENT_MANAGER">PAYMENT_MANAGER (Approve payments)</option>
+            <option value="SUPPORT">SUPPORT (View orders)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 14px;">Create Team Member</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Stack -->
+  <div id="dashboardToastStack" class="toast-container"></div>
+
+  <!-- Dashboard App Script -->
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
