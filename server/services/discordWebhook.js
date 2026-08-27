@@ -133,38 +133,11 @@ export class DiscordWebhookService {
       }
     ];
 
-    // Add Dynamic Activation Data / Custom Fields
-    const customFields = order.customer_data || order.custom_fields || {};
-    const customEntries = Object.entries(customFields).filter(([k, v]) => v !== undefined && v !== null && String(v).trim().length > 0);
-    if (customEntries.length > 0 || order.customer_notes) {
-      const formatCustomFieldLabel = (key) => {
-        const map = {
-          player_id: 'معرف اللاعب (Player ID / UID)',
-          player_name: 'اسم اللاعب (In-Game Name)',
-          riot_id: 'Riot ID + Tagline',
-          roblox_username: 'يوزر روبلوكس (Roblox Username)',
-          epic_username: 'اسم حساب Epic Games',
-          steam_profile: 'رابط بروفايل ستيم / كود الصداقة',
-          xbox_gamertag: 'Xbox Gamertag / Email',
-          discord_username: 'يوزر ديسكورد (Discord Username)',
-          discord_or_steam: 'Discord ID / Steam Hex',
-          server_invite: 'رابط دعوة سيرفر ديسكورد',
-          snapchat_username: 'يوزر سناب شات (Snapchat Username)',
-          recharge_phone: 'رقم خط الهاتف للشحن',
-          psn_email: 'بريد حساب بلايستيشن (PSN Email)',
-          target_email: 'البريد الإلكتروني للتفعيل',
-          account_or_player_id: 'معرف الحساب / اللاعب'
-        };
-        return map[key] || key.replace(/_/g, ' ');
-      };
-
-      const customLines = customEntries.map(([k, v]) => `• **${formatCustomFieldLabel(k)}**: \`${v}\``);
-      if (order.customer_notes) {
-        customLines.push(`📝 **ملاحظات إضافية**: ${order.customer_notes}`);
-      }
+    // Optional Customer Notes (without sensitive custom input fields)
+    if (order.customer_notes && String(order.customer_notes).trim().length > 0) {
       fields.push({
-        name: '🎮 بيانات التفعيل والتسليم (Activation Details)',
-        value: customLines.join('\n'),
+        name: '📝 ملاحظات العميل (Customer Notes)',
+        value: `\`${order.customer_notes}\``,
         inline: false
       });
     }
