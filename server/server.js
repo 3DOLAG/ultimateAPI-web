@@ -184,6 +184,9 @@ async function sendDynamicStoreHtml(req, res) {
     
     // Inject dynamic brand text into placeholders
     html = html.replace(/<span class="store-name-text">.*?<\/span>/g, `<span class="store-name-text">${escapeHtml(storeName)}</span>`);
+    if (tagline) {
+      html = html.replace(/<p class="hero-subtitle" id="heroMainSubtitle">.*?<\/p>/is, `<p class="hero-subtitle" id="heroMainSubtitle">${escapeHtml(tagline)}</p>`);
+    }
   } catch (err) {
     console.warn('[HTML Render] Dynamic meta injection warning:', err.message);
   }

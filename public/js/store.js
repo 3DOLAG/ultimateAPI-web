@@ -163,7 +163,13 @@ const StoreApp = {
       const json = await res.json();
       if (json.success && json.data) {
         this.state.storeInfo = json.data;
-        document.querySelectorAll('.store-name-text').forEach(el => el.textContent = json.data.name);
+        if (json.data.name) {
+          document.querySelectorAll('.store-name-text').forEach(el => el.textContent = json.data.name);
+        }
+        if (json.data.tagline) {
+          const heroSub = document.getElementById('heroMainSubtitle');
+          if (heroSub) heroSub.textContent = json.data.tagline;
+        }
 
         // Dynamic Browser Tab Title Sync
         this.updateDocumentTitle();
