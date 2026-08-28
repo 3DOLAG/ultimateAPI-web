@@ -576,6 +576,7 @@ const StoreApp = {
           const isPriced = Number(it.price) > 0;
           const isAvailable = isPriced && it.is_available !== false;
           const displayName = it.display_name || it.edition_label || it.name;
+          const itemDesc = it.description_ar || it.description || (it.selection && typeof it.selection === 'object' && Object.keys(it.selection).length > 0 ? Object.entries(it.selection).map(([k, val]) => `${k}: ${val}`).join(' • ') : '');
 
           return `
             <div class="variant-card ${isSelected ? 'selected' : ''}" 
@@ -587,7 +588,8 @@ const StoreApp = {
               <div class="variant-price" style="${!isAvailable ? 'color: var(--text-tertiary);' : ''}">
                 ${isPriced ? `${it.price?.toLocaleString()} ${it.currency || 'EGP'}` : 'غير متاح'}
               </div>
-              <div style="font-size: 0.72rem; color: ${isAvailable ? 'var(--success)' : 'var(--danger)'}; margin-top: 4px; font-weight: 600;">
+              ${itemDesc ? `<div class="variant-desc">${itemDesc}</div>` : ''}
+              <div style="font-size: 0.72rem; color: ${isAvailable ? 'var(--success)' : 'var(--danger)'}; margin-top: 6px; font-weight: 600;">
                 ${isAvailable ? '● متوفر' : '● غير متوفر (Out of Stock)'}
               </div>
             </div>
@@ -633,18 +635,44 @@ const StoreApp = {
     const isPriced = Number(v.price) > 0;
     const isAvail = isPriced && v.is_available !== false;
 
-    priceEl.textContent = isPriced ? `${v.price?.toLocaleString()} ${v.currency || 'EGP'}` : 'غير متاح';
+    if (priceEl) priceEl.textContent = isPriced ? `${v.price?.toLocaleString()} ${v.currency || 'EGP'}` : 'غير متاح';
 
     if (isAvail) {
-      stockEl.className = 'badge badge-success';
-      stockEl.textContent = 'متوفر في المخزون';
-      btnBuy.disabled = false;
-      btnBuy.textContent = 'متابعة للدفع والشراء الفوري ←';
+      if (stockEl) {
+        stockEl.className = 'badge badge-success';
+        stockEl.textContent = 'متوفر في المخزون';
+      }
+      if (btnBuy) {
+        btnBuy.disabled = false;
+        btnBuy.textContent = 'متابعة للدفع والشراء الفوري ←';
+      }
     } else {
-      stockEl.className = 'badge badge-danger';
-      stockEl.textContent = 'نفدت الكمية حالياً (Out of Stock)';
-      btnBuy.disabled = true;
-      btnBuy.textContent = 'هذا النوع غير متوفر حالياً';
+      if (stockEl) {
+        stockEl.className = 'badge badge-danger';
+        stockEl.textContent = 'نفدت الكمية حالياً (Out of Stock)';
+      }
+      if (btnBuy) {
+        btnBuy.disabled = true;
+        btnBuy.textContent = 'هذا النوع غير متوفر حالياً';
+      }
+    }
+
+    // Update selected variant description box
+    const descSection = document.getElementById('productVariantDescSection');
+    const descText = document.getElementById('productVariantDescText');
+    const descTitle = document.getElementById('productVariantDescTitle');
+
+    const vDesc = v.description_ar || v.description || (v.selection && typeof v.selection === 'object' && Object.keys(v.selection).length > 0 ? Object.entries(v.selection).map(([k, val]) => `${k}: ${val}`).join(' • ') : '');
+
+    if (descSection && descText) {
+      if (vDesc && vDesc.trim()) {
+        descSection.style.display = 'block';
+        if (descTitle) descTitle.textContent = `تفاصيل ومميزات باقة (${v.display_name || v.edition_label || v.name || 'المختارة'}):`;
+        descText.textContent = vDesc.trim();
+      } else {
+        descSection.style.display = 'none';
+        descText.textContent = '';
+      }
     }
   },
 

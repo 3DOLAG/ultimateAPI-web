@@ -108,6 +108,8 @@ export function initDatabase() {
       edition_label TEXT,
       sku TEXT,
       selection_json TEXT NOT NULL DEFAULT '{}',
+      description TEXT,
+      description_ar TEXT,
       base_price REAL NOT NULL DEFAULT 0,
       currency TEXT NOT NULL DEFAULT 'EGP',
       stock_status TEXT NOT NULL DEFAULT 'IN_STOCK',
@@ -290,6 +292,8 @@ export function initDatabase() {
   try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN discord_event_id TEXT;`); } catch { }
   try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN customer_data_json TEXT NOT NULL DEFAULT '{}';`); } catch { }
   try { db.exec(`ALTER TABLE reseller_orders ADD COLUMN customer_notes TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_items ADD COLUMN description TEXT;`); } catch { }
+  try { db.exec(`ALTER TABLE reseller_items ADD COLUMN description_ar TEXT;`); } catch { }
   try { db.exec(`ALTER TABLE reseller_products ADD COLUMN custom_fields_json TEXT NOT NULL DEFAULT '[]';`); } catch { }
   try { db.exec(`ALTER TABLE reseller_products ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`); } catch { }
   try { db.exec(`ALTER TABLE reseller_categories ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`); } catch { }
@@ -613,10 +617,10 @@ export const dbHelper = {
     const stmt = db.prepare(`
       INSERT OR REPLACE INTO reseller_items (
         id, reseller_id, supplier_item_id, product_id, name, edition_label,
-        sku, selection_json, base_price, currency, stock_status,
+        sku, selection_json, description, description_ar, base_price, currency, stock_status,
         stock_quantity, is_available, status, synced_at
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')
       )
     `);
 
@@ -629,6 +633,8 @@ export const dbHelper = {
       it.edition_label ? String(it.edition_label) : null,
       it.sku ? String(it.sku) : null,
       JSON.stringify(it.selection || {}),
+      it.description ? String(it.description) : null,
+      it.description_ar ? String(it.description_ar) : null,
       basePrice,
       String(it.currency || 'EGP'),
       stockStatus,
@@ -890,6 +896,8 @@ export const dbHelper = {
         edition_label: resolvedName,
         display_name: resolvedName,
         sku: it.sku,
+        description: it.description || '',
+        description_ar: it.description_ar || it.description || '',
         selection,
         price: customerPrice,
         base_price: it.base_price,
@@ -968,6 +976,8 @@ export const dbHelper = {
       edition_label: resolvedName,
       display_name: resolvedName,
       sku: row.sku,
+      description: row.description || '',
+      description_ar: row.description_ar || row.description || '',
       selection,
       base_price: basePrice,
       supplier_cost: basePrice,

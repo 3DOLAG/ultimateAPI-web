@@ -131,6 +131,8 @@ export class SyncEngineService {
               const selection = v.selection || {};
               const rawEdition = v.edition_label || 'Standard Edition';
               const resolvedName = dbHelper.resolveVariantDisplayName({ ...v, edition_label: rawEdition, selection }, optionGroups);
+              const vDesc = v.description || v.description_ar || v.details || v.info || v.features || v.note || v.notes || v.package_description || v.variant_description || v.summary || v.content || '';
+              const vDescAr = v.description_ar || v.description || vDesc;
 
               items.push({
                 id: v.id ? `item_${v.id}` : `item_${p.id}_${v.sku || idx}`,
@@ -139,6 +141,8 @@ export class SyncEngineService {
                 edition_label: rawEdition,
                 sku: v.sku || `${p.slug || p.id}-sku-${idx + 1}`,
                 selection,
+                description: vDesc,
+                description_ar: vDescAr,
                 base_price: basePrice,
                 currency: v.currency || p.currency || 'EGP',
                 stock_status: isAvail ? 'IN_STOCK' : 'OUT_OF_STOCK',
@@ -159,6 +163,8 @@ export class SyncEngineService {
               edition_label: 'Standard License',
               sku: `${p.slug || p.id}-std`,
               selection: {},
+              description: p.description || '',
+              description_ar: p.description_ar || p.description || '',
               base_price: basePrice,
               currency: p.currency || 'EGP',
               stock_status: isAvail ? 'IN_STOCK' : 'OUT_OF_STOCK',
@@ -264,6 +270,8 @@ export class SyncEngineService {
               const selection = v.selection || {};
               const rawEdition = v.edition_label || 'Standard Edition';
               const resolvedName = dbHelper.resolveVariantDisplayName({ ...v, edition_label: rawEdition, selection }, optionGroups);
+              const vDesc = v.description || v.description_ar || v.details || v.info || v.features || v.note || v.notes || v.package_description || v.variant_description || v.summary || v.content || '';
+              const vDescAr = v.description_ar || v.description || vDesc;
               items.push({
                 id: v.id ? `item_${v.id}` : `item_${p.id}_${v.sku || idx}`,
                 supplier_item_id: v.id || `item_${p.id}_${v.sku || idx}`,
@@ -271,6 +279,8 @@ export class SyncEngineService {
                 edition_label: rawEdition,
                 sku: v.sku || `${p.slug || p.id}-sku-${idx + 1}`,
                 selection,
+                description: vDesc,
+                description_ar: vDescAr,
                 base_price: Number(v.reseller_price ?? v.price?.reseller ?? v.base_price ?? v.price?.base ?? 0),
                 currency: v.currency || p.currency || 'EGP',
                 stock_status: v.stock_status || (v.available !== false ? 'IN_STOCK' : 'OUT_OF_STOCK'),
