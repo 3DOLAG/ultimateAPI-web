@@ -997,7 +997,8 @@ const StoreApp = {
       }
     }
 
-    const itemPrice = Number(this.state.selectedVariant.price || 0);
+    const displayName = v.display_name || v.edition_label || v.name || 'النسخة القياسية';
+    const itemPrice = Number(v.price || 0);
 
     this.state.checkoutItem = {
       product: this.state.currentProduct,
@@ -1005,15 +1006,15 @@ const StoreApp = {
       product_name: this.state.currentProduct.name_ar || this.state.currentProduct.name,
       product_slug: this.state.currentProduct.slug,
       category_id: this.state.currentProduct.category_id,
-      item_id: this.state.selectedVariant.id,
-      supplier_item_id: this.state.selectedVariant.supplier_item_id,
+      item_id: v.id,
+      supplier_item_id: v.supplier_item_id || v.id,
       name: displayName,
-      edition_label: this.state.selectedVariant.edition_label,
-      selection: this.state.selectedVariant.selection,
+      edition_label: v.edition_label || displayName,
+      selection: v.selection || {},
       price: itemPrice,
       customer_price: itemPrice,
       unit_customer_price: itemPrice,
-      currency: this.state.selectedVariant.currency || 'EGP',
+      currency: v.currency || 'EGP',
       quantity: 1
     };
 
