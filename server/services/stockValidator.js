@@ -29,15 +29,16 @@ export class StockValidatorService {
       if (prod) {
         const pricing = pricingEngine.calculatePrice(prod.price_base || fallbackItem.price || 0, prod.category_id);
         const customerPrice = pricing.customer_price > 0 ? pricing.customer_price : Number(fallbackItem.price || 0);
+        const isAvailable = customerPrice > 0 && Boolean(prod.is_available);
         return {
-          valid: true,
+          valid: isAvailable,
           item_id: prod.id,
           product_id: prod.id,
           product_name: prod.name,
           variant_label: fallbackItem.name || prod.name,
-          stock_status: 'IN_STOCK',
-          stock_quantity: 99,
-          supplier_cost: pricing.supplier_cost,
+          stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
+          stock_quantity: isAvailable ? (prod.stock_quantity || 50) : 0,
+          supplier_cost: pricing.supplier_cost || (customerPrice * 0.85),
           customer_price: customerPrice,
           currency: pricing.currency || fallbackItem.currency || 'EGP'
         };
@@ -47,14 +48,15 @@ export class StockValidatorService {
       if (fallbackItem && (Number(fallbackItem.price) > 0 || Number(fallbackItem.customer_price) > 0)) {
         const itemPrice = Number(fallbackItem.price || fallbackItem.customer_price);
         const pricing = pricingEngine.calculatePrice(itemPrice * 0.85, fallbackItem.category_id);
+        const isAvailable = itemPrice > 0 && fallbackItem.is_available !== false;
         return {
-          valid: true,
+          valid: isAvailable,
           item_id: itemId || fallbackItem.item_id || 'item_default',
           product_id: fallbackItem.product_id || 'prod_default',
           product_name: fallbackItem.product_name || fallbackItem.name || 'Digital Item',
           variant_label: fallbackItem.edition_label || fallbackItem.name || 'Standard',
-          stock_status: 'IN_STOCK',
-          stock_quantity: 99,
+          stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
+          stock_quantity: isAvailable ? 99 : 0,
           supplier_cost: pricing.supplier_cost || (itemPrice * 0.85),
           customer_price: itemPrice,
           currency: fallbackItem.currency || 'EGP'
@@ -64,25 +66,30 @@ export class StockValidatorService {
       return {
         valid: false,
         error: 'ITEM_NOT_FOUND',
-        message: 'The requested product option does not exist.'
+        message: 'The requested product option does not exist or is not available for purchase.'
       };
     }
 
-    const pricing = pricingEngine.calculatePrice(localItem.base_price, localItem.category_id);
-    const isPriced = pricing.supplier_cost > 0 && pricing.customer_price > 0;
+    let baseCost = Number(localItem.base_price || 0);
+    if (baseCost <= 0 && Number(fallbackItem.price) > 0) {
+      baseCost = Number(fallbackItem.price) * 0.85;
+    }
+    const pricing = pricingEngine.calculatePrice(baseCost, localItem.category_id);
+    const customerPrice = pricing.customer_price > 0 ? pricing.customer_price : Number(localItem.price || fallbackItem.price || 0);
+    const isPriced = customerPrice > 0;
     const isAvailable = isPriced && Boolean(localItem.is_available);
 
     return {
       valid: isAvailable,
       item_id: localItem.id,
       product_id: localItem.product_id,
-      product_name: localItem.product_name,
-      variant_label: localItem.edition_label || localItem.name,
+      product_name: localItem.product_name || fallbackItem.product_name,
+      variant_label: localItem.edition_label || localItem.name || fallbackItem.name,
       stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
-      stock_quantity: isAvailable ? localItem.stock_quantity : 0,
-      supplier_cost: pricing.supplier_cost,
-      customer_price: pricing.customer_price,
-      currency: pricing.currency
+      stock_quantity: isAvailable ? (localItem.stock_quantity || 50) : 0,
+      supplier_cost: pricing.supplier_cost || (customerPrice * 0.85),
+      customer_price: customerPrice,
+      currency: pricing.currency || fallbackItem.currency || 'EGP'
     };
   }
 

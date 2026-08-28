@@ -41,6 +41,13 @@ export class OrderService {
     console.log(`[OrderService] 🛡️ Performing Stage 3 Real-Time Stock & Price Validation...`);
     const totals = await stockValidator.validateCartOrItem(items);
 
+    if (!totals || Number(totals.total) <= 0) {
+      const err = new Error('تعذر معالجة الطلب: سعر المنتج أو الباقة غير متاح حالياً (المجموع 0 جنيه). يرجى اختيار خيار متوفر.');
+      err.code = 'INVALID_TOTAL_PRICE';
+      err.status = 400;
+      throw err;
+    }
+
     const trackingToken = `trk_${crypto.randomBytes(16).toString('hex')}`;
     const internalId = `ord_${crypto.randomUUID()}`;
 

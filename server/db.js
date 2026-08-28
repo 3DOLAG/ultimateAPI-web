@@ -875,7 +875,7 @@ export const dbHelper = {
       ORDER BY (base_price > 0) DESC, base_price ASC, id ASC
     `);
 
-    const items = itemsStmt.all(row.id).map(it => {
+    const rawItems = itemsStmt.all(row.id).map(it => {
       const customerPrice = Math.round((it.base_price * multiplier) * 100) / 100;
       const isPriced = it.base_price > 0 && customerPrice > 0;
       const isAvailable = isPriced && Boolean(it.is_available);
@@ -891,9 +891,9 @@ export const dbHelper = {
         display_name: resolvedName,
         sku: it.sku,
         selection,
-        price: customerPrice,
-        base_price: it.base_price,
-        currency: it.currency,
+        price: isPriced ? customerPrice : 0,
+        base_price: it.base_price || 0,
+        currency: it.currency || 'EGP',
         stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
         stock_quantity: isAvailable ? it.stock_quantity : 0,
         is_available: isAvailable,
@@ -901,12 +901,39 @@ export const dbHelper = {
       };
     });
 
+    // Keep only valid, purchasable variants with price > 0
+    let items = rawItems.filter(it => it.price > 0 && it.is_available);
+
+    // Fallback: If no variant items exist or all variants were unpriced, check product-level base price
+    if (items.length === 0 && Number(row.price_base) > 0) {
+      const singlePrice = Math.round((Number(row.price_base) * multiplier) * 100) / 100;
+      if (singlePrice > 0) {
+        items = [{
+          id: `item_${row.id}_std`,
+          supplier_item_id: row.supplier_product_id || row.id,
+          product_id: row.id,
+          name: row.name_ar || row.name,
+          edition_label: 'النسخة القياسية',
+          display_name: row.name_ar || row.name,
+          sku: `${row.slug}-std`,
+          selection: {},
+          price: singlePrice,
+          base_price: Number(row.price_base),
+          currency: row.currency || 'EGP',
+          stock_status: row.stock_available ? 'IN_STOCK' : 'OUT_OF_STOCK',
+          stock_quantity: row.stock_quantity || 50,
+          is_available: Boolean(row.stock_available),
+          status: row.status
+        }];
+      }
+    }
+
     const availableItems = items.filter(it => it.is_available && it.price > 0);
     const startingPrice = availableItems.length > 0
       ? availableItems[0].price
-      : (items.length > 0 ? items[0].price : Math.round((row.price_base * multiplier) * 100) / 100);
+      : (items.length > 0 ? items[0].price : Math.round((Number(row.price_base) * multiplier) * 100) / 100);
 
-    const isProductAvailable = availableItems.length > 0 && Boolean(row.stock_available);
+    const isProductAvailable = availableItems.length > 0 && Boolean(row.stock_available) && startingPrice > 0;
 
     return {
       id: row.id,
@@ -921,29 +948,62 @@ export const dbHelper = {
       images: JSON.parse(row.images_json || '[]'),
       option_groups: optionGroups,
       custom_fields: JSON.parse(row.custom_fields_json || '[]'),
-      has_variants: Boolean(row.has_variants),
-      price: startingPrice,
-      currency: row.currency,
+      has_variants: items.length > 1,
+      price: startingPrice > 0 ? startingPrice : 0,
+      currency: row.currency || 'EGP',
       stock_quantity: isProductAvailable ? row.stock_quantity : 0,
       is_available: isProductAvailable,
       is_hidden: Boolean(row.is_hidden),
       items,
       variants: items,
-      status: row.status,
+      status: isProductAvailable ? row.status : 'inactive',
       supplier_updated_at: row.supplier_updated_at,
       synced_at: row.synced_at
     };
   },
 
   getItemById(itemId, resellerId = 'default') {
+    if (!itemId) return null;
     const stmt = db.prepare(`
       SELECT i.*, p.category_id, p.name as product_name, p.slug as product_slug, p.option_groups_json
       FROM reseller_items i
       JOIN reseller_products p ON i.product_id = p.id
-      WHERE i.reseller_id = ? AND (i.id = ? OR i.supplier_item_id = ?)
+      WHERE i.reseller_id = ? AND (i.id = ? OR i.supplier_item_id = ? OR i.sku = ?)
     `);
-    const row = stmt.get(resellerId, itemId, itemId);
-    if (!row) return null;
+    const row = stmt.get(resellerId, itemId, itemId, itemId);
+    if (!row) {
+      // Fallback: check if itemId is a product ID or slug
+      const prod = this.getProductByIdOrSlug(itemId, resellerId, true);
+      if (prod) {
+        const availableItems = (prod.items || []).filter(i => i.is_available && i.price > 0);
+        if (availableItems.length > 0) {
+          return availableItems[0];
+        }
+        if (prod.price > 0) {
+          return {
+            id: `item_${prod.id}_std`,
+            supplier_item_id: prod.supplier_product_id || prod.id,
+            product_id: prod.id,
+            product_name: prod.name,
+            product_slug: prod.slug,
+            category_id: prod.category_id,
+            name: prod.name,
+            edition_label: 'النسخة القياسية',
+            display_name: prod.name,
+            sku: `${prod.slug}-std`,
+            selection: {},
+            base_price: prod.price_base || (prod.price * 0.85),
+            price: prod.price,
+            currency: prod.currency || 'EGP',
+            stock_status: prod.is_available ? 'IN_STOCK' : 'OUT_OF_STOCK',
+            stock_quantity: prod.stock_quantity || 50,
+            is_available: prod.is_available,
+            status: prod.status
+          };
+        }
+      }
+      return null;
+    }
 
     const marginPercent = this.getEffectiveMarginForCategory(row.category_id);
     const multiplier = 1 + (marginPercent / 100);
@@ -967,7 +1027,7 @@ export const dbHelper = {
       sku: row.sku,
       selection,
       base_price: row.base_price,
-      price: customerPrice,
+      price: isPriced ? customerPrice : 0,
       currency: row.currency,
       stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
       stock_quantity: isAvailable ? row.stock_quantity : 0,

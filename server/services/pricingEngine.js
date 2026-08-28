@@ -32,13 +32,22 @@ export class PricingEngineService {
     for (const item of items) {
       // Find item in DB to guarantee base supplier cost authority
       const dbItem = dbHelper.getItemById(item.item_id || item.id || item.product_id);
-      const baseCost = dbItem ? dbItem.base_price : Number(item.base_price || item.unit_supplier_cost || item.price || 0);
+      let baseCost = dbItem ? Number(dbItem.base_price || 0) : Number(item.base_price || item.unit_supplier_cost || 0);
       const categoryId = item.category_id || dbItem?.category_id;
 
-      const pricing = this.calculatePrice(baseCost, categoryId);
+      let pricing = this.calculatePrice(baseCost, categoryId);
+      let unitCustomerPrice = pricing.customer_price;
+      let unitSupplierCost = pricing.supplier_cost;
+
+      // If unitCustomerPrice is 0 but price was specified on the item
+      if (unitCustomerPrice <= 0 && Number(item.price || item.customer_price || item.unit_customer_price) > 0) {
+        unitCustomerPrice = Number(item.price || item.customer_price || item.unit_customer_price);
+        unitSupplierCost = baseCost > 0 ? baseCost : Math.round((unitCustomerPrice * 0.85) * 100) / 100;
+      }
+
       const quantity = Math.max(1, parseInt(item.quantity || 1, 10));
-      const lineCustomerTotal = Math.round((pricing.customer_price * quantity) * 100) / 100;
-      const lineSupplierTotal = Math.round((pricing.supplier_cost * quantity) * 100) / 100;
+      const lineCustomerTotal = Math.round((unitCustomerPrice * quantity) * 100) / 100;
+      const lineSupplierTotal = Math.round((unitSupplierCost * quantity) * 100) / 100;
 
       supplierCostTotal += lineSupplierTotal;
       customerSubtotal += lineCustomerTotal;
@@ -50,8 +59,8 @@ export class PricingEngineService {
         name: item.name || dbItem?.name || 'Purchasable Item',
         variant_label: item.variant_label || dbItem?.edition_label || null,
         quantity,
-        unit_supplier_cost: pricing.supplier_cost,
-        unit_customer_price: pricing.customer_price,
+        unit_supplier_cost: unitSupplierCost,
+        unit_customer_price: unitCustomerPrice,
         total_price: lineCustomerTotal,
         profit: Math.round((lineCustomerTotal - lineSupplierTotal) * 100) / 100
       });
