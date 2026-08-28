@@ -564,33 +564,9 @@ const StoreApp = {
         document.getElementById('productDetailDesc').textContent = p.description_ar || p.description || 'اشتراك رقمي موثوق مع تسليم مباشر وتفعيل رسمي.';
 
         const variantsGrid = document.getElementById('productVariantsGrid');
-        const allItems = Array.isArray(p.items) && p.items.length > 0 ? p.items : [
-          { id: p.id, name: p.name_ar || p.name || 'النسخة القياسية', price: p.price, is_available: p.is_available }
+        const items = Array.isArray(p.items) && p.items.length > 0 ? p.items : [
+          { id: p.id, name: 'النسخة القياسية', price: p.price, is_available: p.is_available }
         ];
-
-        // Filter to only items that have real price > 0
-        const pricedItems = allItems.filter(i => Number(i.price) > 0 && i.is_available !== false);
-        const items = pricedItems.length > 0 ? pricedItems : allItems.filter(i => Number(i.price) > 0);
-
-        if (items.length === 0) {
-          // Entire product is out of stock / not priced
-          this.state.selectedVariant = null;
-          variantsGrid.innerHTML = `
-            <div style="grid-column: 1 / -1; padding: 24px; text-align: center; background: rgba(239, 68, 68, 0.08); border: 1px dashed rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); color: var(--text-secondary);">
-              <div style="font-size: 2rem; margin-bottom: 6px;">🚫</div>
-              <strong style="color: var(--danger); display: block; margin-bottom: 4px; font-size: 1.05rem;">هذا المنتج غير متوفر حالياً</strong>
-              <span style="font-size: 0.82rem;">الأسعار والباقات قيد التحديث من المورّد. يرجى مراجعة الدعم الفني أو اختيار منتج آخر.</span>
-            </div>
-          `;
-          document.getElementById('productDetailPrice').textContent = 'غير متوفر';
-          const stockEl = document.getElementById('productDetailStockBadge');
-          stockEl.className = 'badge badge-danger';
-          stockEl.textContent = 'نفدت الكمية (Out of Stock)';
-          const btnBuy = document.getElementById('btnProceedToCheckout');
-          btnBuy.disabled = true;
-          btnBuy.textContent = 'المنتج غير متوفر حالياً';
-          return;
-        }
 
         // Select first available variant with price > 0 by default
         this.state.selectedVariant = items.find(i => i.is_available && Number(i.price) > 0) || items[0];
@@ -606,7 +582,7 @@ const StoreApp = {
                  id="variant-card-${it.id}"
                  data-item-id="${it.id}"
                  onclick="StoreApp.selectProductVariant('${it.id}')"
-                 style="${!isAvailable ? 'opacity: 0.55; border-color: rgba(239, 68, 68, 0.35); pointer-events: none;' : ''}">
+                 style="${!isAvailable ? 'opacity: 0.55; border-color: rgba(239, 68, 68, 0.35);' : ''}">
               <div class="variant-name">${displayName}</div>
               <div class="variant-price" style="${!isAvailable ? 'color: var(--text-tertiary);' : ''}">
                 ${isPriced ? `${it.price?.toLocaleString()} ${it.currency || 'EGP'}` : 'غير متاح'}
@@ -629,10 +605,7 @@ const StoreApp = {
   selectProductVariant(itemId) {
     if (!this.state.currentProduct) return;
     const it = (this.state.currentProduct.items || []).find(i => i.id === itemId);
-    if (!it || Number(it.price) <= 0 || !it.is_available) {
-      this.showToast('هذا الخيار غير متاح حالياً للشراء', 'warning');
-      return;
-    }
+    if (!it) return;
 
     this.state.selectedVariant = it;
 
@@ -651,18 +624,11 @@ const StoreApp = {
 
   updateProductDetailPriceDisplay() {
     const v = this.state.selectedVariant;
+    if (!v) return;
+
     const priceEl = document.getElementById('productDetailPrice');
     const stockEl = document.getElementById('productDetailStockBadge');
     const btnBuy = document.getElementById('btnProceedToCheckout');
-
-    if (!v || Number(v.price) <= 0) {
-      priceEl.textContent = 'غير متوفر';
-      stockEl.className = 'badge badge-danger';
-      stockEl.textContent = 'نفدت الكمية حالياً (Out of Stock)';
-      btnBuy.disabled = true;
-      btnBuy.textContent = 'هذا النوع غير متوفر حالياً';
-      return;
-    }
 
     const isPriced = Number(v.price) > 0;
     const isAvail = isPriced && v.is_available !== false;
@@ -1016,8 +982,8 @@ const StoreApp = {
     }
 
     const v = this.state.selectedVariant;
-    if (!v || !v.is_available || Number(v.price) <= 0) {
-      this.showToast('هذا الخيار غير متاح حالياً للشراء (السعر غير متوفر أو نفدت الكمية)', 'error');
+    if (!v.is_available || Number(v.price) <= 0) {
+      this.showToast('هذا النوع غير متاح حالياً للشراء (نفدت الكمية)', 'error');
       return;
     }
 
@@ -1031,7 +997,7 @@ const StoreApp = {
       }
     }
 
-    const displayName = v.display_name || v.edition_label || v.name;
+    const itemPrice = Number(this.state.selectedVariant.price || 0);
 
     this.state.checkoutItem = {
       product: this.state.currentProduct,
@@ -1044,7 +1010,9 @@ const StoreApp = {
       name: displayName,
       edition_label: this.state.selectedVariant.edition_label,
       selection: this.state.selectedVariant.selection,
-      price: Number(this.state.selectedVariant.price),
+      price: itemPrice,
+      customer_price: itemPrice,
+      unit_customer_price: itemPrice,
       currency: this.state.selectedVariant.currency || 'EGP',
       quantity: 1
     };
@@ -1060,8 +1028,7 @@ const StoreApp = {
     this.updateDocumentTitle('تأكيد بيانات الطلب');
     const item = this.state.checkoutItem;
 
-    if (!item || Number(item.price) <= 0) {
-      this.showToast('قيمة الطلب غير صالحة. يرجى اختيار باقة متوفرة.', 'error');
+    if (!item) {
       this.navigate('/');
       return;
     }
@@ -1117,10 +1084,7 @@ const StoreApp = {
   async submitCheckout(e) {
     e.preventDefault();
     const item = this.state.checkoutItem;
-    if (!item || Number(item.price) <= 0) {
-      this.showToast('قيمة الطلب غير صالحة (0 جنيه). يرجى اختيار باقة متوفرة.', 'error');
-      return;
-    }
+    if (!item) return;
 
     const btn = document.getElementById('btnConfirmOrder');
     btn.disabled = true;

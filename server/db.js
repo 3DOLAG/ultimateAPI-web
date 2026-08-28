@@ -875,7 +875,7 @@ export const dbHelper = {
       ORDER BY (base_price > 0) DESC, base_price ASC, id ASC
     `);
 
-    const rawItems = itemsStmt.all(row.id).map(it => {
+    const items = itemsStmt.all(row.id).map(it => {
       const customerPrice = Math.round((it.base_price * multiplier) * 100) / 100;
       const isPriced = it.base_price > 0 && customerPrice > 0;
       const isAvailable = isPriced && Boolean(it.is_available);
@@ -891,9 +891,9 @@ export const dbHelper = {
         display_name: resolvedName,
         sku: it.sku,
         selection,
-        price: isPriced ? customerPrice : 0,
-        base_price: it.base_price || 0,
-        currency: it.currency || 'EGP',
+        price: customerPrice,
+        base_price: it.base_price,
+        currency: it.currency,
         stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
         stock_quantity: isAvailable ? it.stock_quantity : 0,
         is_available: isAvailable,
@@ -901,39 +901,12 @@ export const dbHelper = {
       };
     });
 
-    // Keep only valid, purchasable variants with price > 0
-    let items = rawItems.filter(it => it.price > 0 && it.is_available);
-
-    // Fallback: If no variant items exist or all variants were unpriced, check product-level base price
-    if (items.length === 0 && Number(row.price_base) > 0) {
-      const singlePrice = Math.round((Number(row.price_base) * multiplier) * 100) / 100;
-      if (singlePrice > 0) {
-        items = [{
-          id: `item_${row.id}_std`,
-          supplier_item_id: row.supplier_product_id || row.id,
-          product_id: row.id,
-          name: row.name_ar || row.name,
-          edition_label: 'النسخة القياسية',
-          display_name: row.name_ar || row.name,
-          sku: `${row.slug}-std`,
-          selection: {},
-          price: singlePrice,
-          base_price: Number(row.price_base),
-          currency: row.currency || 'EGP',
-          stock_status: row.stock_available ? 'IN_STOCK' : 'OUT_OF_STOCK',
-          stock_quantity: row.stock_quantity || 50,
-          is_available: Boolean(row.stock_available),
-          status: row.status
-        }];
-      }
-    }
-
     const availableItems = items.filter(it => it.is_available && it.price > 0);
     const startingPrice = availableItems.length > 0
       ? availableItems[0].price
-      : (items.length > 0 ? items[0].price : Math.round((Number(row.price_base) * multiplier) * 100) / 100);
+      : (items.length > 0 ? items[0].price : Math.round((row.price_base * multiplier) * 100) / 100);
 
-    const isProductAvailable = availableItems.length > 0 && Boolean(row.stock_available) && startingPrice > 0;
+    const isProductAvailable = availableItems.length > 0 && Boolean(row.stock_available);
 
     return {
       id: row.id,
@@ -948,15 +921,15 @@ export const dbHelper = {
       images: JSON.parse(row.images_json || '[]'),
       option_groups: optionGroups,
       custom_fields: JSON.parse(row.custom_fields_json || '[]'),
-      has_variants: items.length > 1,
-      price: startingPrice > 0 ? startingPrice : 0,
-      currency: row.currency || 'EGP',
+      has_variants: Boolean(row.has_variants),
+      price: startingPrice,
+      currency: row.currency,
       stock_quantity: isProductAvailable ? row.stock_quantity : 0,
       is_available: isProductAvailable,
       is_hidden: Boolean(row.is_hidden),
       items,
       variants: items,
-      status: isProductAvailable ? row.status : 'inactive',
+      status: row.status,
       supplier_updated_at: row.supplier_updated_at,
       synced_at: row.synced_at
     };
@@ -965,50 +938,20 @@ export const dbHelper = {
   getItemById(itemId, resellerId = 'default') {
     if (!itemId) return null;
     const stmt = db.prepare(`
-      SELECT i.*, p.category_id, p.name as product_name, p.slug as product_slug, p.option_groups_json
+      SELECT i.*, p.category_id, p.name as product_name, p.name_ar as product_name_ar, p.slug as product_slug, p.option_groups_json, p.price_base as product_base_price
       FROM reseller_items i
-      JOIN reseller_products p ON i.product_id = p.id
-      WHERE i.reseller_id = ? AND (i.id = ? OR i.supplier_item_id = ? OR i.sku = ?)
+      LEFT JOIN reseller_products p ON (i.product_id = p.id OR i.product_id = p.supplier_product_id OR i.product_id = p.slug)
+      WHERE (i.reseller_id = ? OR i.reseller_id = 'default') AND (i.id = ? OR i.supplier_item_id = ? OR i.sku = ?)
     `);
     const row = stmt.get(resellerId, itemId, itemId, itemId);
-    if (!row) {
-      // Fallback: check if itemId is a product ID or slug
-      const prod = this.getProductByIdOrSlug(itemId, resellerId, true);
-      if (prod) {
-        const availableItems = (prod.items || []).filter(i => i.is_available && i.price > 0);
-        if (availableItems.length > 0) {
-          return availableItems[0];
-        }
-        if (prod.price > 0) {
-          return {
-            id: `item_${prod.id}_std`,
-            supplier_item_id: prod.supplier_product_id || prod.id,
-            product_id: prod.id,
-            product_name: prod.name,
-            product_slug: prod.slug,
-            category_id: prod.category_id,
-            name: prod.name,
-            edition_label: 'النسخة القياسية',
-            display_name: prod.name,
-            sku: `${prod.slug}-std`,
-            selection: {},
-            base_price: prod.price_base || (prod.price * 0.85),
-            price: prod.price,
-            currency: prod.currency || 'EGP',
-            stock_status: prod.is_available ? 'IN_STOCK' : 'OUT_OF_STOCK',
-            stock_quantity: prod.stock_quantity || 50,
-            is_available: prod.is_available,
-            status: prod.status
-          };
-        }
-      }
-      return null;
-    }
+    if (!row) return null;
 
-    const marginPercent = this.getEffectiveMarginForCategory(row.category_id);
+    const catId = row.category_id || 'games';
+    const marginPercent = this.getEffectiveMarginForCategory(catId);
     const multiplier = 1 + (marginPercent / 100);
-    const customerPrice = Math.round((row.base_price * multiplier) * 100) / 100;
-    const isPriced = row.base_price > 0 && customerPrice > 0;
+    const basePrice = Number(row.base_price > 0 ? row.base_price : (row.product_base_price || 0));
+    const customerPrice = basePrice > 0 ? Math.round((basePrice * multiplier) * 100) / 100 : 0;
+    const isPriced = customerPrice > 0;
     const isAvailable = isPriced && Boolean(row.is_available);
     const selection = JSON.parse(row.selection_json || '{}');
     const optionGroups = JSON.parse(row.option_groups_json || '[]');
@@ -1018,17 +961,21 @@ export const dbHelper = {
       id: row.id,
       supplier_item_id: row.supplier_item_id,
       product_id: row.product_id,
-      product_name: row.product_name,
+      product_name: row.product_name_ar || row.product_name,
       product_slug: row.product_slug,
-      category_id: row.category_id,
+      category_id: catId,
       name: resolvedName,
       edition_label: resolvedName,
       display_name: resolvedName,
       sku: row.sku,
       selection,
-      base_price: row.base_price,
-      price: isPriced ? customerPrice : 0,
-      currency: row.currency,
+      base_price: basePrice,
+      supplier_cost: basePrice,
+      unit_supplier_cost: basePrice,
+      customer_price: customerPrice,
+      unit_customer_price: customerPrice,
+      price: customerPrice,
+      currency: row.currency || 'EGP',
       stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
       stock_quantity: isAvailable ? row.stock_quantity : 0,
       is_available: isAvailable,
@@ -1082,10 +1029,18 @@ export const dbHelper = {
   // -------------------------------------------------------------
   createOrder(orderData) {
     const orderId = orderData.id || `ord_${crypto.randomUUID()}`;
+    let computedSubtotal = 0;
+    let computedSupplierCost = 0;
+
     const orderItems = (orderData.items || []).map((it, idx) => {
-      const price = Number(it.price || it.unit_customer_price || 0);
-      const cost = Number(it.unit_supplier_cost || it.base_price || 0);
-      const qty = Number(it.quantity || 1);
+      const price = Number(it.price || it.unit_customer_price || it.total_price || 0);
+      const cost = Number(it.unit_supplier_cost || it.supplier_cost || it.base_price || (price * 0.85));
+      const qty = Math.max(1, Number(it.quantity || 1));
+      const lineTotal = Math.round((price * qty) * 100) / 100;
+
+      computedSubtotal += lineTotal;
+      computedSupplierCost += Math.round((cost * qty) * 100) / 100;
+
       return {
         id: it.id || `ord_item_${orderId}_${idx}`,
         order_id: orderId,
@@ -1098,9 +1053,19 @@ export const dbHelper = {
         quantity: qty,
         unit_supplier_cost: cost,
         unit_customer_price: price,
-        total_price: price * qty
+        price: price,
+        total_price: lineTotal
       };
     });
+
+    const subtotal = Number(orderData.subtotal) > 0 ? Number(orderData.subtotal) : Math.round(computedSubtotal * 100) / 100;
+    const tax = Number(orderData.tax || 0);
+    const shippingFee = Number(orderData.shipping_fee || 0);
+    const total = Number(orderData.total) > 0 ? Number(orderData.total) : Math.round((subtotal + tax + shippingFee) * 100) / 100;
+    const supplierCost = Number(orderData.supplier_cost) > 0 ? Number(orderData.supplier_cost) : Math.round(computedSupplierCost * 100) / 100;
+    const resellerProfit = Number(orderData.reseller_profit) !== undefined && Number(orderData.reseller_profit) !== 0
+      ? Number(orderData.reseller_profit)
+      : Math.round((total - supplierCost) * 100) / 100;
 
     const orderObj = {
       id: orderId,
@@ -1116,13 +1081,13 @@ export const dbHelper = {
       customer_data: orderData.customer_data || orderData.custom_fields || {},
       customer_notes: orderData.customer_notes || orderData.notes || null,
       items: orderItems,
-      subtotal: orderData.subtotal,
-      tax: orderData.tax || 0,
-      shipping_fee: orderData.shipping_fee || 0,
-      total: orderData.total,
+      subtotal,
+      tax,
+      shipping_fee: shippingFee,
+      total,
       currency: orderData.currency || 'EGP',
-      supplier_cost: orderData.supplier_cost || 0,
-      reseller_profit: orderData.reseller_profit || 0,
+      supplier_cost: supplierCost,
+      reseller_profit: resellerProfit,
       payment_method_id: orderData.payment_method_id || null,
       payment_method_name: orderData.payment_method_name || null,
       payment_reference: orderData.payment_reference || null,

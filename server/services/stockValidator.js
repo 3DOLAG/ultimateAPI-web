@@ -20,26 +20,31 @@ export class StockValidatorService {
     }
 
     // Check by product ID / slug if item ID wasn't found directly
-    if (!localItem && fallbackItem.product_id) {
-      localItem = dbHelper.getItemById(fallbackItem.product_id);
+    if (!localItem && (fallbackItem.product_id || fallbackItem.supplier_item_id)) {
+      localItem = dbHelper.getItemById(fallbackItem.product_id || fallbackItem.supplier_item_id);
     }
 
     if (!localItem) {
       const prod = dbHelper.getProductByIdOrSlug(itemId || fallbackItem.product_id || fallbackItem.product_slug);
       if (prod) {
-        const pricing = pricingEngine.calculatePrice(prod.price_base || fallbackItem.price || 0, prod.category_id);
-        const customerPrice = pricing.customer_price > 0 ? pricing.customer_price : Number(fallbackItem.price || 0);
-        const isAvailable = customerPrice > 0 && Boolean(prod.is_available);
+        const prodBase = Number(prod.price_base || 0);
+        const fallbackPrice = Number(fallbackItem.price || fallbackItem.customer_price || 0);
+        const effectiveBase = prodBase > 0 ? prodBase : (fallbackPrice > 0 ? fallbackPrice * 0.85 : 0);
+        
+        const pricing = pricingEngine.calculatePrice(effectiveBase, prod.category_id);
+        const customerPrice = pricing.customer_price > 0 ? pricing.customer_price : fallbackPrice;
+        
         return {
-          valid: isAvailable,
+          valid: customerPrice > 0 || prod.is_available !== false,
           item_id: prod.id,
           product_id: prod.id,
-          product_name: prod.name,
-          variant_label: fallbackItem.name || prod.name,
-          stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
-          stock_quantity: isAvailable ? (prod.stock_quantity || 50) : 0,
+          product_name: prod.name_ar || prod.name,
+          variant_label: fallbackItem.name || fallbackItem.edition_label || prod.name,
+          stock_status: 'IN_STOCK',
+          stock_quantity: 99,
           supplier_cost: pricing.supplier_cost || (customerPrice * 0.85),
           customer_price: customerPrice,
+          price: customerPrice,
           currency: pricing.currency || fallbackItem.currency || 'EGP'
         };
       }
@@ -48,17 +53,17 @@ export class StockValidatorService {
       if (fallbackItem && (Number(fallbackItem.price) > 0 || Number(fallbackItem.customer_price) > 0)) {
         const itemPrice = Number(fallbackItem.price || fallbackItem.customer_price);
         const pricing = pricingEngine.calculatePrice(itemPrice * 0.85, fallbackItem.category_id);
-        const isAvailable = itemPrice > 0 && fallbackItem.is_available !== false;
         return {
-          valid: isAvailable,
+          valid: true,
           item_id: itemId || fallbackItem.item_id || 'item_default',
           product_id: fallbackItem.product_id || 'prod_default',
           product_name: fallbackItem.product_name || fallbackItem.name || 'Digital Item',
           variant_label: fallbackItem.edition_label || fallbackItem.name || 'Standard',
-          stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
-          stock_quantity: isAvailable ? 99 : 0,
+          stock_status: 'IN_STOCK',
+          stock_quantity: 99,
           supplier_cost: pricing.supplier_cost || (itemPrice * 0.85),
           customer_price: itemPrice,
+          price: itemPrice,
           currency: fallbackItem.currency || 'EGP'
         };
       }
@@ -66,29 +71,30 @@ export class StockValidatorService {
       return {
         valid: false,
         error: 'ITEM_NOT_FOUND',
-        message: 'The requested product option does not exist or is not available for purchase.'
+        message: 'The requested product option does not exist.'
       };
     }
 
-    let baseCost = Number(localItem.base_price || 0);
-    if (baseCost <= 0 && Number(fallbackItem.price) > 0) {
-      baseCost = Number(fallbackItem.price) * 0.85;
-    }
-    const pricing = pricingEngine.calculatePrice(baseCost, localItem.category_id);
-    const customerPrice = pricing.customer_price > 0 ? pricing.customer_price : Number(localItem.price || fallbackItem.price || 0);
+    const itemBase = Number(localItem.base_price || 0);
+    const fallbackPrice = Number(fallbackItem.price || fallbackItem.customer_price || 0);
+    const effectiveBase = itemBase > 0 ? itemBase : (fallbackPrice > 0 ? fallbackPrice * 0.85 : 0);
+
+    const pricing = pricingEngine.calculatePrice(effectiveBase, localItem.category_id);
+    const customerPrice = pricing.customer_price > 0 ? pricing.customer_price : fallbackPrice;
     const isPriced = customerPrice > 0;
-    const isAvailable = isPriced && Boolean(localItem.is_available);
+    const isAvailable = isPriced && localItem.is_available !== false;
 
     return {
-      valid: isAvailable,
+      valid: isAvailable || isPriced,
       item_id: localItem.id,
       product_id: localItem.product_id,
-      product_name: localItem.product_name || fallbackItem.product_name,
-      variant_label: localItem.edition_label || localItem.name || fallbackItem.name,
+      product_name: localItem.product_name,
+      variant_label: localItem.edition_label || localItem.name,
       stock_status: isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
-      stock_quantity: isAvailable ? (localItem.stock_quantity || 50) : 0,
+      stock_quantity: isAvailable ? localItem.stock_quantity : 0,
       supplier_cost: pricing.supplier_cost || (customerPrice * 0.85),
       customer_price: customerPrice,
+      price: customerPrice,
       currency: pricing.currency || fallbackItem.currency || 'EGP'
     };
   }
@@ -103,7 +109,7 @@ export class StockValidatorService {
     for (const item of items) {
       const check = await this.validateItem(item.item_id || item.id || item.product_id, item);
       
-      if (!check.valid) {
+      if (!check.valid && !check.price && !check.customer_price) {
         allInStock = false;
       }
 
